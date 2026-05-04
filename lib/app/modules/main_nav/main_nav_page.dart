@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
+import '../transaction/pages/transaction_list_page.dart';
+import '../transaction/pages/transaction_form_page.dart';
+import '../../../config/routes/app_routes.dart';
 import 'main_nav_controller.dart';
 
 class MainNavPage extends GetView<MainNavController> {
@@ -13,17 +16,15 @@ class MainNavPage extends GetView<MainNavController> {
             index: controller.currentIndex.value,
             children: const [
               DashboardPage(),
-              _PlaceholderPage('Transactions'),
+              TransactionListPage(),
               _PlaceholderPage('Statistics'),
               _PlaceholderPage('Settings'),
             ],
           ),
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: controller.currentIndex.value,
-            onTap: (i) {
-              if (i == 2) return; // FAB tap — handled separately
-              controller.changePage(i);
-            },
+            onTap: controller.changePage,
+            type: BottomNavigationBarType.fixed,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
@@ -48,9 +49,7 @@ class MainNavPage extends GetView<MainNavController> {
             ],
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              // TODO(phase-2): navigate to transaction add page
-            },
+            onPressed: () => Get.toNamed(AppRoutes.transactionAdd),
             child: const Icon(Icons.add),
           ),
           floatingActionButtonLocation:
@@ -69,11 +68,13 @@ class _PlaceholderPage extends StatelessWidget {
       appBar: AppBar(title: Text(title)),
       body: Center(
         child: Text(
-          '$title\n(Coming in Phase 2)',
+          '$title\n(Coming soon)',
           textAlign: TextAlign.center,
           style: TextStyle(
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.4)),
         ),
       ),
     );
