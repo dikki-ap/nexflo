@@ -1,0 +1,37 @@
+abstract class AppRoutes {
+  static const splash = '/splash';
+  static const login = '/login';
+  static const lock = '/lock';
+  static const onboarding = '/onboarding';
+  static const main = '/main';
+  static const dashboard = '/dashboard';
+  static const transactions = '/transactions';
+  static const transactionAdd = '/transactions/add';
+  static const transactionDetail = '/transactions/:id';
+  static const transactionEdit = '/transactions/:id/edit';
+  static const receiptScan = '/transactions/scan';
+  static const statistics = '/statistics';
+  static const settings = '/settings';
+  static const settingsCurrency = '/settings/currency';
+  static const settingsTheme = '/settings/theme';
+  static const settingsSecurity = '/settings/security';
+  static const settingsSync = '/settings/sync';
+  static const wallets = '/wallets';
+  static const walletAdd = '/wallets/add';
+  static const walletDetail = '/wallets/:id';
+  static const walletEdit = '/wallets/:id/edit';
+  static const categories = '/categories';
+  static const categoryAdd = '/categories/add';
+  static const categoryEdit = '/categories/:id/edit';
+  static const budgets = '/budgets';
+  static const budgetAdd = '/budgets/add';
+  static const budgetEdit = '/budgets/:id/edit';
+  static const goals = '/goals';
+  static const goalAdd = '/goals/add';
+  static const goalDetail = '/goals/:id';
+  static const debts = '/debts';
+  static const debtAdd = '/debts/add';
+  static const debtDetail = '/debts/:id';
+  static const recurring = '/recurring';
+  static const recurringAdd = '/recurring/add';
+}
