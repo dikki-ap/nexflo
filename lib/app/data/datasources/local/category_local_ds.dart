@@ -2,22 +2,12 @@ import 'package:drift/drift.dart';
 import '../../database/app_database.dart';
 import '../../../core/errors/exceptions.dart';
 import '../../../core/utils/uuid_helper.dart';
+import '../../models/category_model.dart';
+import '../../../domain/entities/category_entity.dart';
 
 class CategoryLocalDataSource {
   final AppDatabase _db;
   CategoryLocalDataSource(this._db);
-
-  Future<List<Category>> getAllByUserId(String userId) async {
-    try {
-      return await (_db.select(_db.categories)
-            ..where((c) => c.userId.equals(userId))
-            ..where((c) => c.deletedAt.isNull())
-            ..orderBy([(c) => OrderingTerm.asc(c.sortOrder)]))
-          .get();
-    } catch (e) {
-      throw LocalDatabaseException('Failed to get categories: $e');
-    }
-  }
 
   Future<void> insertMany(List<CategoriesCompanion> companions) async {
     try {
@@ -39,6 +29,85 @@ class CategoryLocalDataSource {
     } catch (e) {
       return false;
     }
+  }
+
+  Future<List<CategoryModel>> getAllByUserId(String userId) async {
+    try {
+      final rows = await (_db.select(_db.categories)
+            ..where((c) => c.userId.equals(userId))
+            ..where((c) => c.deletedAt.isNull())
+            ..orderBy([(c) => OrderingTerm.asc(c.sortOrder)]))
+          .get();
+      return rows.map(CategoryModel.fromDrift).toList();
+    } catch (e) {
+      throw LocalDatabaseException('Failed to get categories: $e');
+    }
+  }
+
+  Future<CategoryModel> insert(CategoryModel model) async {
+    try {
+      await _db.into(_db.categories).insert(model.toCompanion());
+      return model;
+    } catch (e) {
+      throw LocalDatabaseException('Failed to create category: $e');
+    }
+  }
+
+  Future<CategoryModel> update(CategoryEntity cat) async {
+    try {
+      final model = CategoryModel(
+        id: cat.id,
+        userId: cat.userId,
+        name: cat.name,
+        type: cat.type,
+        iconName: cat.iconName,
+        colorHex: cat.colorHex,
+        isDefault: cat.isDefault,
+        sortOrder: cat.sortOrder,
+        isArchived: cat.isArchived,
+        createdAt: cat.createdAt,
+        updatedAt: DateTime.now(),
+        deletedAt: cat.deletedAt,
+        syncStatus: 'pending',
+      );
+      await (_db.update(_db.categories)..where((c) => c.id.equals(cat.id)))
+          .write(model.toCompanion());
+      return model;
+    } catch (e) {
+      throw LocalDatabaseException('Failed to update category: $e');
+    }
+  }
+
+  Future<void> softDelete(String id) async {
+    try {
+      await (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
+        CategoriesCompanion(
+          deletedAt: Value(DateTime.now()),
+          syncStatus: const Value('pending'),
+        ),
+      );
+    } catch (e) {
+      throw LocalDatabaseException('Failed to delete category: $e');
+    }
+  }
+
+  Future<void> setArchived(String id, bool archive) async {
+    try {
+      await (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
+        CategoriesCompanion(
+          isArchived: Value(archive),
+          updatedAt: Value(DateTime.now()),
+          syncStatus: const Value('pending'),
+        ),
+      );
+    } catch (e) {
+      throw LocalDatabaseException('Failed to archive category: $e');
+    }
+  }
+
+  Future<int> getNextSortOrder(String userId) async {
+    final cats = await getAllByUserId(userId);
+    return cats.isEmpty ? 0 : cats.last.sortOrder + 1;
   }
 
   Future<void> seedDefaultCategories(String userId) async {

@@ -1,0 +1,121 @@
+import 'package:drift/drift.dart' show Value;
+import '../../core/enums/transaction_type.dart';
+import '../../core/utils/uuid_helper.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../database/app_database.dart';
+
+class TransactionModel extends TransactionEntity {
+  const TransactionModel({
+    required super.id,
+    required super.userId,
+    required super.walletId,
+    super.toWalletId,
+    super.categoryId,
+    super.subcategoryId,
+    required super.type,
+    required super.amount,
+    super.originalAmount,
+    super.originalCurrency,
+    super.exchangeRate,
+    super.note,
+    required super.date,
+    super.receiptImagePath,
+    required super.isRecurring,
+    super.recurringId,
+    required super.createdAt,
+    required super.updatedAt,
+    super.deletedAt,
+    required super.syncStatus,
+    required super.version,
+  });
+
+  factory TransactionModel.fromDrift(Transaction t) => TransactionModel(
+        id: t.id,
+        userId: t.userId,
+        walletId: t.walletId,
+        toWalletId: t.toWalletId,
+        categoryId: t.categoryId,
+        subcategoryId: t.subcategoryId,
+        type: TransactionType.fromValue(t.type),
+        amount: t.amount,
+        originalAmount: t.originalAmount,
+        originalCurrency: t.originalCurrency,
+        exchangeRate: t.exchangeRate,
+        note: t.note,
+        date: t.date,
+        receiptImagePath: t.receiptImagePath,
+        isRecurring: t.isRecurring,
+        recurringId: t.recurringId,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+        deletedAt: t.deletedAt,
+        syncStatus: t.syncStatus,
+        version: t.version,
+      );
+
+  static TransactionModel create({
+    required String userId,
+    required String walletId,
+    String? toWalletId,
+    String? categoryId,
+    String? subcategoryId,
+    required String type,
+    required double amount,
+    double? originalAmount,
+    String? originalCurrency,
+    double? exchangeRate,
+    String? note,
+    required DateTime date,
+    String? receiptImagePath,
+    bool isRecurring = false,
+    String? recurringId,
+  }) {
+    final now = DateTime.now();
+    return TransactionModel(
+      id: UuidHelper.generate(),
+      userId: userId,
+      walletId: walletId,
+      toWalletId: toWalletId,
+      categoryId: categoryId,
+      subcategoryId: subcategoryId,
+      type: TransactionType.fromValue(type),
+      amount: amount,
+      originalAmount: originalAmount,
+      originalCurrency: originalCurrency,
+      exchangeRate: exchangeRate,
+      note: note,
+      date: date,
+      receiptImagePath: receiptImagePath,
+      isRecurring: isRecurring,
+      recurringId: recurringId,
+      createdAt: now,
+      updatedAt: now,
+      syncStatus: 'pending',
+      version: 1,
+    );
+  }
+
+  TransactionsCompanion toCompanion() => TransactionsCompanion(
+        id: Value(id),
+        userId: Value(userId),
+        walletId: Value(walletId),
+        toWalletId: Value(toWalletId),
+        categoryId: Value(categoryId),
+        subcategoryId: Value(subcategoryId),
+        type: Value(type.value),
+        amount: Value(amount),
+        originalAmount: Value(originalAmount),
+        originalCurrency: Value(originalCurrency),
+        exchangeRate: Value(exchangeRate),
+        note: Value(note),
+        date: Value(date),
+        receiptImagePath: Value(receiptImagePath),
+        isRecurring: Value(isRecurring),
+        recurringId: Value(recurringId),
+        createdAt: Value(createdAt),
+        updatedAt: Value(updatedAt),
+        deletedAt: Value(deletedAt),
+        syncStatus: Value(syncStatus),
+        version: Value(version),
+      );
+}
