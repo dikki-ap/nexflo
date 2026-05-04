@@ -77,6 +77,25 @@ class AppTheme {
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: cs.surface,
+        indicatorColor: cs.primaryContainer,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+                color: cs.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 11);
+          }
+          return TextStyle(color: cs.onSurfaceVariant, fontSize: 11);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: cs.onPrimaryContainer);
+          }
+          return IconThemeData(color: cs.onSurfaceVariant);
+        }),
+      ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -158,6 +177,25 @@ class AppTheme {
         unselectedItemColor: AppColors.grey600,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.darkSurface,
+        indicatorColor: cs.primaryContainer,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+                color: cs.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 11);
+          }
+          return TextStyle(color: cs.onSurfaceVariant, fontSize: 11);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: cs.onPrimaryContainer);
+          }
+          return IconThemeData(color: cs.onSurfaceVariant);
+        }),
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(

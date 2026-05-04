@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
 import '../transaction/pages/transaction_list_page.dart';
-import '../transaction/pages/transaction_form_page.dart';
 import '../../../config/routes/app_routes.dart';
 import 'main_nav_controller.dart';
 
@@ -21,29 +20,28 @@ class MainNavPage extends GetView<MainNavController> {
               _PlaceholderPage('Settings'),
             ],
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: controller.currentIndex.value,
-            onTap: controller.changePage,
-            type: BottomNavigationBarType.fixed,
-            items: const [
-              BottomNavigationBarItem(
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: controller.currentIndex.value,
+            onDestinationSelected: controller.changePage,
+            destinations: const [
+              NavigationDestination(
                 icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
+                selectedIcon: Icon(Icons.home),
                 label: 'Dashboard',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.receipt_long_outlined),
-                activeIcon: Icon(Icons.receipt_long),
+                selectedIcon: Icon(Icons.receipt_long),
                 label: 'Transactions',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.bar_chart_outlined),
-                activeIcon: Icon(Icons.bar_chart),
+                selectedIcon: Icon(Icons.bar_chart),
                 label: 'Statistics',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.settings_outlined),
-                activeIcon: Icon(Icons.settings),
+                selectedIcon: Icon(Icons.settings),
                 label: 'Settings',
               ),
             ],
@@ -52,8 +50,7 @@ class MainNavPage extends GetView<MainNavController> {
             onPressed: () => Get.toNamed(AppRoutes.transactionAdd),
             child: const Icon(Icons.add),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ));
   }
 }

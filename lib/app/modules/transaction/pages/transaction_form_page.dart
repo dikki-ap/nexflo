@@ -19,14 +19,7 @@ class TransactionFormPage extends GetView<TransactionController> {
       ),
       body: Column(
         children: [
-          // Type tabs
-          Obx(() => Row(
-                children: [
-                  _TypeTab('Expense', 0, AppColors.expense),
-                  _TypeTab('Income', 1, AppColors.income),
-                  _TypeTab('Transfer', 2, AppColors.transfer),
-                ],
-              )),
+          _TypeSelector(context),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -40,12 +33,11 @@ class TransactionFormPage extends GetView<TransactionController> {
                         const TextInputType.numberWithOptions(decimal: true),
                     style: const TextStyle(
                         fontSize: 28, fontWeight: FontWeight.bold),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: '0',
-                      hintStyle: const TextStyle(
+                      hintStyle: TextStyle(
                           fontSize: 28, fontWeight: FontWeight.bold),
-                      prefixIcon: const Icon(Icons.attach_money),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.attach_money),
                       labelText: 'Amount',
                     ),
                     autofocus: !isEdit,
@@ -64,7 +56,6 @@ class TransactionFormPage extends GetView<TransactionController> {
                             controller.selectedWalletId.value = v,
                         decoration: const InputDecoration(
                           labelText: 'Wallet',
-                          border: OutlineInputBorder(),
                         ),
                       )),
                   const SizedBox(height: 16),
@@ -88,7 +79,6 @@ class TransactionFormPage extends GetView<TransactionController> {
                             controller.selectedToWalletId.value = v,
                         decoration: const InputDecoration(
                           labelText: 'To Wallet',
-                          border: OutlineInputBorder(),
                         ),
                       ),
                     );
@@ -122,7 +112,6 @@ class TransactionFormPage extends GetView<TransactionController> {
                             controller.selectedCategoryId.value = v,
                         decoration: const InputDecoration(
                           labelText: 'Category',
-                          border: OutlineInputBorder(),
                         ),
                       ),
                     );
@@ -133,7 +122,6 @@ class TransactionFormPage extends GetView<TransactionController> {
                         child: InputDecorator(
                           decoration: const InputDecoration(
                             labelText: 'Date',
-                            border: OutlineInputBorder(),
                             suffixIcon: Icon(Icons.calendar_today),
                           ),
                           child: Text(_formatDate(
@@ -146,7 +134,6 @@ class TransactionFormPage extends GetView<TransactionController> {
                     controller: controller.noteCtrl,
                     decoration: const InputDecoration(
                       labelText: 'Note (optional)',
-                      border: OutlineInputBorder(),
                     ),
                     maxLines: 2,
                   ),
@@ -177,6 +164,24 @@ class TransactionFormPage extends GetView<TransactionController> {
     );
   }
 
+  Widget _TypeSelector(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _PillTab('Expense', 0, AppColors.expense),
+          _PillTab('Income', 1, AppColors.income),
+          _PillTab('Transfer', 2, AppColors.transfer),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pickDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
@@ -196,11 +201,11 @@ class TransactionFormPage extends GetView<TransactionController> {
       ][m];
 }
 
-class _TypeTab extends GetView<TransactionController> {
+class _PillTab extends GetView<TransactionController> {
   final String label;
   final int index;
   final Color color;
-  const _TypeTab(this.label, this.index, this.color);
+  const _PillTab(this.label, this.index, this.color);
 
   @override
   Widget build(BuildContext context) {
@@ -211,23 +216,24 @@ class _TypeTab extends GetView<TransactionController> {
           onTap: () => controller.selectedTab.value = index,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: selected ? color : Colors.transparent,
-              border: Border(
-                bottom: BorderSide(
-                  color: selected ? color : Colors.grey.shade300,
-                  width: selected ? 3 : 1,
-                ),
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight:
-                    selected ? FontWeight.bold : FontWeight.normal,
-                color: selected ? color : null,
+                    selected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.55),
               ),
             ),
           ),

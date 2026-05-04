@@ -28,9 +28,7 @@ class DashboardPage extends GetView<DashboardController> {
             children: [
               _PeriodFilterChips(controller),
               const SizedBox(height: 16),
-              _NetWorthCard(controller),
-              const SizedBox(height: 12),
-              _SummaryRow(controller),
+              _HeroSection(controller),
               const SizedBox(height: 20),
               _WalletsSection(controller),
               const SizedBox(height: 20),
@@ -92,8 +90,7 @@ class _PeriodFilterChips extends StatelessWidget {
             itemBuilder: (_, i) {
               final p = _periods[i];
               return FilterChip(
-                label: Text(p.label,
-                    style: const TextStyle(fontSize: 13)),
+                label: Text(p.label, style: const TextStyle(fontSize: 13)),
                 selected: ctrl.selectedPeriod.value == p,
                 onSelected: (_) => ctrl.changePeriod(p),
               );
@@ -103,112 +100,148 @@ class _PeriodFilterChips extends StatelessWidget {
   }
 }
 
-class _NetWorthCard extends StatelessWidget {
+class _HeroSection extends StatelessWidget {
   final DashboardController ctrl;
-  const _NetWorthCard(this.ctrl);
+  const _HeroSection(this.ctrl);
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Net Worth',
-                style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6))),
-            const SizedBox(height: 6),
-            Obx(() => Text(
-                  _fmt(ctrl.netWorth),
-                  style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: accent),
-                )),
-          ],
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary, primary.withValues(alpha: 0.72)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            right: -12,
+            top: -20,
+            child: Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 48,
+            bottom: -40,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Net Worth',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 13,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Obx(() => Text(
+                    _fmt(ctrl.netWorth),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  )),
+              const SizedBox(height: 20),
+              Obx(() => Row(
+                    children: [
+                      _HeroStat(
+                        label: 'Income',
+                        amount: ctrl.totalIncome.value,
+                        icon: Icons.arrow_upward_rounded,
+                      ),
+                      const SizedBox(width: 28),
+                      _HeroStat(
+                        label: 'Expense',
+                        amount: ctrl.totalExpense.value,
+                        icon: Icons.arrow_downward_rounded,
+                      ),
+                    ],
+                  )),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   String _fmt(double v) {
     if (v.abs() >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v.abs() >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
     return v.toStringAsFixed(0);
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  final DashboardController ctrl;
-  const _SummaryRow(this.ctrl);
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() => Row(
-          children: [
-            Expanded(
-              child: _SummaryCard(
-                label: 'Income',
-                amount: ctrl.totalIncome.value,
-                color: AppColors.income,
-                icon: Icons.arrow_upward,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _SummaryCard(
-                label: 'Expense',
-                amount: ctrl.totalExpense.value,
-                color: AppColors.expense,
-                icon: Icons.arrow_downward,
-              ),
-            ),
-          ],
-        ));
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
+class _HeroStat extends StatelessWidget {
   final String label;
   final double amount;
-  final Color color;
   final IconData icon;
-  const _SummaryCard(
-      {required this.label,
-      required this.amount,
-      required this.color,
-      required this.icon});
+  const _HeroStat({
+    required this.label,
+    required this.amount,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.2),
+          ),
+          child: Icon(icon, color: Colors.white, size: 14),
+        ),
+        const SizedBox(width: 8),
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Icon(icon, color: color, size: 14),
-              const SizedBox(width: 4),
-              Text(label,
-                  style: TextStyle(fontSize: 12, color: color)),
-            ]),
-            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 11,
+              ),
+            ),
             Text(
               _fmt(amount),
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: color),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
@@ -232,8 +265,7 @@ class _WalletsSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('Wallets',
-                style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             TextButton(
               onPressed: () => Get.toNamed(AppRoutes.wallets),
               child: const Text('See All'),
@@ -258,8 +290,7 @@ class _WalletsSection extends StatelessWidget {
                   child: Text(
                     '+ Add your first wallet',
                     style: TextStyle(
-                        color:
-                            Theme.of(context).colorScheme.primary),
+                        color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
               ),
@@ -284,10 +315,7 @@ class _WalletsSection extends StatelessWidget {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          color,
-                          color.withValues(alpha: 0.7)
-                        ],
+                        colors: [color, color.withValues(alpha: 0.7)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -304,8 +332,7 @@ class _WalletsSection extends StatelessWidget {
                           children: [
                             Text(w.name,
                                 style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12)),
+                                    color: Colors.white, fontSize: 12)),
                             Text(
                               '${w.currencyCode} ${_fmtBalance(w.balance)}',
                               style: const TextStyle(
@@ -347,8 +374,7 @@ class _RecentTransactionsSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('Recent Transactions',
-                style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             TextButton(
               onPressed: () => Get.toNamed(AppRoutes.transactions),
               child: const Text('See All'),
@@ -421,8 +447,7 @@ class _TxRow extends StatelessWidget {
             size: 18),
       ),
       title: Text(cat?.name ?? (isTransfer ? 'Transfer' : 'Uncategorized'),
-          style:
-              const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       subtitle: Text(wallet?.name ?? '',
           style: const TextStyle(fontSize: 11)),
       trailing: Text(
