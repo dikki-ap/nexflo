@@ -60,6 +60,45 @@ class SettingsModel extends SettingsEntity {
         notificationDebtReminder: true,
       );
 
+  @override
+  SettingsModel copyWith({
+    String? baseCurrencyCode,
+    int? cutoffDate,
+    String? themeMode,
+    ThemeColor? themeColor,
+    String? themeCustomHex,
+    bool? isBiometricEnabled,
+    bool? isPinEnabled,
+    String? pinHash,
+    String? sheetsSpreadsheetId,
+    DateTime? lastSyncAt,
+    bool? syncEnabled,
+    bool? notificationBudgetAlert,
+    bool? notificationRecurringReminder,
+    bool? notificationDebtReminder,
+  }) =>
+      SettingsModel(
+        id: id,
+        userId: userId,
+        baseCurrencyCode: baseCurrencyCode ?? this.baseCurrencyCode,
+        cutoffDate: cutoffDate ?? this.cutoffDate,
+        themeMode: themeMode ?? this.themeMode,
+        themeColor: themeColor ?? this.themeColor,
+        themeCustomHex: themeCustomHex ?? this.themeCustomHex,
+        isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
+        isPinEnabled: isPinEnabled ?? this.isPinEnabled,
+        pinHash: pinHash ?? this.pinHash,
+        sheetsSpreadsheetId: sheetsSpreadsheetId ?? this.sheetsSpreadsheetId,
+        lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+        syncEnabled: syncEnabled ?? this.syncEnabled,
+        notificationBudgetAlert:
+            notificationBudgetAlert ?? this.notificationBudgetAlert,
+        notificationRecurringReminder:
+            notificationRecurringReminder ?? this.notificationRecurringReminder,
+        notificationDebtReminder:
+            notificationDebtReminder ?? this.notificationDebtReminder,
+      );
+
   SettingsCompanion toCompanion() => SettingsCompanion(
         id: Value(id),
         userId: Value(userId),

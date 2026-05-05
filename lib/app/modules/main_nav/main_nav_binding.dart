@@ -3,6 +3,7 @@ import 'main_nav_controller.dart';
 import '../dashboard/controllers/dashboard_controller.dart';
 import '../transaction/controllers/transaction_controller.dart';
 import '../statistics/controllers/statistics_controller.dart';
+import '../settings/controllers/settings_controller.dart';
 
 class MainNavBinding extends Bindings {
   @override
@@ -11,5 +12,6 @@ class MainNavBinding extends Bindings {
     Get.lazyPut(() => DashboardController());
     Get.lazyPut(() => TransactionController());
     Get.lazyPut(() => StatisticsController());
+    Get.lazyPut(() => SettingsController());
   }
 }

@@ -35,6 +35,10 @@ import '../../modules/statistics/pages/statistics_page.dart';
 import '../../modules/recurring/bindings/recurring_binding.dart';
 import '../../modules/recurring/pages/recurring_list_page.dart';
 import '../../modules/recurring/pages/recurring_form_page.dart';
+import '../../modules/settings/bindings/settings_binding.dart';
+import '../../modules/settings/pages/settings_page.dart';
+import '../../modules/settings/pages/sync_settings_page.dart';
+import '../../modules/settings/pages/currency_settings_page.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -182,6 +186,22 @@ class AppPages {
       name: AppRoutes.recurringAdd,
       page: () => const RecurringFormPage(),
       binding: RecurringBinding(),
+    ),
+    // Settings
+    GetPage(
+      name: AppRoutes.settings,
+      page: () => const SettingsPage(),
+      binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.settingsSync,
+      page: () => const SyncSettingsPage(),
+      binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.settingsCurrency,
+      page: () => const CurrencySettingsPage(),
+      binding: SettingsBinding(),
     ),
   ];
 }

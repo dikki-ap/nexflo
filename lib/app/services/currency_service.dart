@@ -1,31 +1,107 @@
 import 'package:get/get.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/currency_local_ds.dart';
+import '../data/datasources/local/currency_rate_local_ds.dart';
+import '../data/datasources/remote/currency_rate_remote_ds.dart';
 
 class CurrencyService extends GetxService {
   final AppDatabase _db;
   CurrencyService(this._db);
 
-  late final CurrencyLocalDataSource _localDs;
+  late final CurrencyLocalDataSource _currencyDs;
+  late final CurrencyRateLocalDataSource _rateDs;
+  late final CurrencyRateRemoteDataSource _remoteDs;
+
+  final _rates = <String, Map<String, double>>{}.obs;
+  String _baseCurrency = 'USD';
 
   Future<CurrencyService> init() async {
-    _localDs = CurrencyLocalDataSource(_db);
-    await _localDs.seedCurrencies();
+    _currencyDs = CurrencyLocalDataSource(_db);
+    _rateDs = CurrencyRateLocalDataSource(_db);
+    _remoteDs = CurrencyRateRemoteDataSource();
+
+    await _currencyDs.seedCurrencies();
+    await _loadCachedRates();
+    await _refreshIfStale();
+
     return this;
   }
 
-  Future<String> getSymbol(String currencyCode) async {
-    final currency = await _localDs.getByCode(currencyCode);
-    return currency?.symbol ?? currencyCode;
+  void setBaseCurrency(String code) {
+    _baseCurrency = code;
+    _loadCachedRates();
   }
 
-  // TODO(phase-5): implement Frankfurter API rate fetching and conversion
+  Future<void> _loadCachedRates() async {
+    try {
+      final rates = await _rateDs.getAllRatesFrom(_baseCurrency);
+      _rates[_baseCurrency] = rates;
+    } catch (_) {}
+  }
+
+  Future<void> _refreshIfStale() async {
+    try {
+      final lastFetch = await _rateDs.getLastFetchedAt(_baseCurrency);
+      final isStale = lastFetch == null ||
+          DateTime.now().difference(lastFetch).inHours >= 24;
+      if (isStale) await refreshRates();
+    } catch (_) {}
+  }
+
+  Future<void> refreshRates() async {
+    try {
+      final rates = await _remoteDs.fetchLatestRates(_baseCurrency);
+      await _rateDs.saveRates(fromCurrency: _baseCurrency, rates: rates);
+      _rates[_baseCurrency] = rates;
+    } catch (_) {
+      // Silently use cached rates if network unavailable
+    }
+  }
+
   double convert({
     required double amount,
     required String fromCurrency,
     required String toCurrency,
   }) {
     if (fromCurrency == toCurrency) return amount;
-    return amount; // placeholder until Phase 5
+    final rates = _rates[_baseCurrency] ?? {};
+
+    // Convert: from → base → to
+    final double inBase;
+    if (fromCurrency == _baseCurrency) {
+      inBase = amount;
+    } else {
+      final rateFromBase = rates[fromCurrency];
+      if (rateFromBase == null || rateFromBase == 0) return amount;
+      inBase = amount / rateFromBase;
+    }
+
+    if (toCurrency == _baseCurrency) return inBase;
+    final rateToTarget = rates[toCurrency];
+    if (rateToTarget == null) return amount;
+    return inBase * rateToTarget;
   }
+
+  Future<void> setManualRate({
+    required String fromCurrency,
+    required String toCurrency,
+    required double rate,
+  }) async {
+    await _rateDs.saveManualRate(
+      fromCurrency: fromCurrency,
+      toCurrency: toCurrency,
+      rate: rate,
+    );
+    await _loadCachedRates();
+  }
+
+  Future<String> getSymbol(String currencyCode) async {
+    final currency = await _currencyDs.getByCode(currencyCode);
+    return currency?.symbol ?? currencyCode;
+  }
+
+  Map<String, double> get currentRates => _rates[_baseCurrency] ?? {};
+  String get baseCurrency => _baseCurrency;
+
+  Future<List<Currency>> getAllCurrencies() => _currencyDs.getAll();
 }

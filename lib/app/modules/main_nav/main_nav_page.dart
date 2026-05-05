@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
 import '../transaction/pages/transaction_list_page.dart';
 import '../statistics/pages/statistics_page.dart';
+import '../settings/pages/settings_page.dart';
 import '../../../config/routes/app_routes.dart';
 import 'main_nav_controller.dart';
 
@@ -18,7 +19,7 @@ class MainNavPage extends GetView<MainNavController> {
               DashboardPage(),
               TransactionListPage(),
               StatisticsPage(),
-              _PlaceholderPage('Settings'),
+              const SettingsPage(),
             ],
           ),
           bottomNavigationBar: NavigationBar(
