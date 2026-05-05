@@ -21,11 +21,19 @@ class BudgetListPage extends GetView<BudgetController> {
         if (controller.budgets.isEmpty) {
           return _EmptyState();
         }
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-          itemCount: controller.budgets.length,
-          itemBuilder: (_, i) =>
-              _BudgetCard(controller.budgets[i], controller),
+        return Column(
+          children: [
+            if (controller.alertBudgets.isNotEmpty)
+              _AlertBanner(controller.alertBudgets.length),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                itemCount: controller.budgets.length,
+                itemBuilder: (_, i) =>
+                    _BudgetCard(controller.budgets[i], controller),
+              ),
+            ),
+          ],
         );
       }),
       floatingActionButton: FloatingActionButton.extended(
@@ -35,6 +43,37 @@ class BudgetListPage extends GetView<BudgetController> {
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Budget'),
+      ),
+    );
+  }
+}
+
+class _AlertBanner extends StatelessWidget {
+  final int count;
+  const _AlertBanner(this.count);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.budgetAlert.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              color: AppColors.budgetAlert, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            '$count budget${count > 1 ? 's' : ''} reaching limit',
+            style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.budgetAlert,
+                fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -76,6 +115,8 @@ class _BudgetCard extends StatelessWidget {
     final spent = ctrl.spentFor(budget);
     final progress = ctrl.progressFor(budget);
     final progressColor = _progressColor(progress);
+    final effectiveLimit = ctrl.effectiveLimitFor(budget);
+    final rollover = ctrl.rolloverAmounts[budget.id] ?? 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -94,14 +135,28 @@ class _BudgetCard extends StatelessWidget {
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 15)),
                       const SizedBox(height: 2),
-                      Text(
-                        budget.period.label,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5)),
+                      Row(
+                        children: [
+                          Text(
+                            budget.period.label,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.5)),
+                          ),
+                          if (rollover > 0) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '+${_fmt(rollover)} rollover',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.income.withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -164,7 +219,7 @@ class _BudgetCard extends StatelessWidget {
                       color: progressColor),
                 ),
                 Text(
-                  'of ${_fmt(budget.amount)}',
+                  'of ${_fmt(effectiveLimit)}',
                   style: TextStyle(
                       fontSize: 13,
                       color: Theme.of(context)

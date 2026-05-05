@@ -167,6 +167,18 @@ class GoalController extends GetxController {
     );
   }
 
+  DateTime? projectedCompletion(GoalEntity g) {
+    if (g.status == GoalStatus.completed) return null;
+    if (g.targetAmount <= 0 || g.currentAmount <= 0) return null;
+    final daysElapsed = DateTime.now().difference(g.createdAt).inDays;
+    if (daysElapsed <= 0) return null;
+    final dailyRate = g.currentAmount / daysElapsed;
+    final remaining = g.targetAmount - g.currentAmount;
+    if (remaining <= 0) return null;
+    final daysNeeded = (remaining / dailyRate).ceil();
+    return DateTime.now().add(Duration(days: daysNeeded));
+  }
+
   String onTrackLabel(GoalEntity g) {
     if (g.deadline == null || g.targetAmount == 0) return '';
     final totalDays =

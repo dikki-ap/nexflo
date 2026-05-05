@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
@@ -17,6 +18,7 @@ class GoalDetailPage extends GetView<GoalController> {
     final color = ColorHelper.fromHex(goal.colorHex);
     final isDone = goal.status == GoalStatus.completed;
     final onTrack = controller.onTrackLabel(goal);
+    final projected = controller.projectedCompletion(goal);
 
     return Scaffold(
       appBar: AppBar(
@@ -92,6 +94,8 @@ class GoalDetailPage extends GetView<GoalController> {
               ),
             ),
             const SizedBox(height: 16),
+            _GoalProgressChart(goal: goal, color: color),
+            const SizedBox(height: 16),
             // Info card
             Card(
               child: Padding(
@@ -114,6 +118,8 @@ class GoalDetailPage extends GetView<GoalController> {
                             ? AppColors.expense
                             : null,
                       ),
+                    if (projected != null)
+                      _InfoRow('Projected Completion', _fmtDate(projected)),
                     if (goal.note != null && goal.note!.isNotEmpty)
                       _InfoRow('Note', goal.note!),
                   ],
@@ -205,6 +211,136 @@ class GoalDetailPage extends GetView<GoalController> {
     if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
     return v.toStringAsFixed(0);
+  }
+
+  String _fmtDate(DateTime d) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${d.day} ${months[d.month]} ${d.year}';
+  }
+}
+
+class _GoalProgressChart extends StatelessWidget {
+  final GoalEntity goal;
+  final Color color;
+  const _GoalProgressChart({required this.goal, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final daysElapsed = DateTime.now()
+        .difference(goal.createdAt)
+        .inDays
+        .toDouble()
+        .clamp(1.0, double.infinity);
+    final currentPct = goal.progress * 100;
+
+    final hasDeadline = goal.deadline != null;
+    final totalDays = hasDeadline
+        ? goal.deadline!.difference(goal.createdAt).inDays.toDouble()
+        : null;
+    final maxX = (totalDays != null && totalDays > daysElapsed)
+        ? totalDays
+        : daysElapsed;
+
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                'Progress Over Time',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: onSurface.withValues(alpha: 0.8)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 140,
+              child: LineChart(
+                LineChartData(
+                  minX: 0,
+                  maxX: maxX,
+                  minY: 0,
+                  maxY: 100,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: [FlSpot(0, 0), FlSpot(daysElapsed, currentPct)],
+                      isCurved: false,
+                      color: color,
+                      barWidth: 2.5,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (s, x, bar, i) => FlDotCirclePainter(
+                          radius: i == 1 ? 4 : 0,
+                          color: color,
+                          strokeWidth: 0,
+                          strokeColor: Colors.transparent,
+                        ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: color.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    if (hasDeadline && totalDays! > 0)
+                      LineChartBarData(
+                        spots: [FlSpot(0, 0), FlSpot(totalDays, 100)],
+                        isCurved: false,
+                        color: onSurface.withValues(alpha: 0.3),
+                        barWidth: 1.5,
+                        dotData: const FlDotData(show: false),
+                        dashArray: [5, 5],
+                      ),
+                  ],
+                  gridData: const FlGridData(show: false),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 36,
+                        interval: 25,
+                        getTitlesWidget: (v, _) => Text(
+                          '${v.toInt()}%',
+                          style: TextStyle(
+                              fontSize: 9,
+                              color: onSurface.withValues(alpha: 0.4)),
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: (maxX / 4).clamp(1, double.infinity),
+                        getTitlesWidget: (v, _) => Text(
+                          'd${v.toInt()}',
+                          style: TextStyle(
+                              fontSize: 9,
+                              color: onSurface.withValues(alpha: 0.4)),
+                        ),
+                      ),
+                    ),
+                    rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

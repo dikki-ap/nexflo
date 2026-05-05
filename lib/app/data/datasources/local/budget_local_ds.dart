@@ -98,6 +98,51 @@ class BudgetLocalDataSource {
     }
   }
 
+  Future<double> getPreviousPeriodSpent({
+    required String userId,
+    required BudgetEntity budget,
+  }) async {
+    try {
+      final (start, end) = _getPreviousPeriodRange(budget.period);
+      var query = _db.select(_db.transactions)
+        ..where((t) => t.userId.equals(userId))
+        ..where((t) => t.type.equals('expense'))
+        ..where((t) => t.date.isBetweenValues(start, end))
+        ..where((t) => t.deletedAt.isNull());
+      final rows = await query.get();
+      var filtered = rows.toList();
+      if (!budget.isAllCategories && budget.categoryId != null) {
+        filtered = filtered
+            .where((t) => t.categoryId == budget.categoryId)
+            .toList();
+      }
+      if (budget.walletId != null) {
+        filtered =
+            filtered.where((t) => t.walletId == budget.walletId).toList();
+      }
+      return filtered.fold(0.0, (s, t) => s + t.amount);
+    } catch (e) {
+      throw LocalDatabaseException('Failed to get previous period spent: $e');
+    }
+  }
+
+  (DateTime, DateTime) _getPreviousPeriodRange(BudgetPeriod period) {
+    final now = DateTime.now();
+    switch (period) {
+      case BudgetPeriod.monthly:
+        return (
+          DateTime(now.year, now.month - 1, 1),
+          DateTime(now.year, now.month, 1),
+        );
+      case BudgetPeriod.weekly:
+        final start = DateTime(
+            now.year, now.month, now.day - (now.weekday - 1) - 7);
+        return (start, start.add(const Duration(days: 7)));
+      case BudgetPeriod.yearly:
+        return (DateTime(now.year - 1, 1, 1), DateTime(now.year, 1, 1));
+    }
+  }
+
   (DateTime, DateTime) _getPeriodRange(BudgetPeriod period) {
     final now = DateTime.now();
     switch (period) {

@@ -46,9 +46,16 @@ class BudgetController extends GetxController {
 
   String get _userId => Get.find<AuthService>().currentUser!.id;
 
+  final rolloverAmounts = <String, double>{}.obs;
+  final alertBudgets = <BudgetEntity>[].obs;
+
   double spentFor(BudgetEntity b) => budgetSpent[b.id] ?? 0;
-  double progressFor(BudgetEntity b) =>
-      b.amount > 0 ? (spentFor(b) / b.amount).clamp(0.0, 1.0) : 0;
+  double effectiveLimitFor(BudgetEntity b) =>
+      b.amount + (rolloverAmounts[b.id] ?? 0);
+  double progressFor(BudgetEntity b) {
+    final limit = effectiveLimitFor(b);
+    return limit > 0 ? spentFor(b) / limit : 0;
+  }
 
   @override
   void onInit() {
@@ -77,19 +84,37 @@ class BudgetController extends GetxController {
     isLoading.value = true;
     final uid = _userId;
     await Future.wait([
-      _getAll(GetAllBudgetsParams(uid)).then((r) => r.fold((_) {}, (list) async {
-            budgets.value = list;
-            for (final b in list) {
-              budgetSpent[b.id] =
-                  await _budgetDs.getSpentAmount(userId: uid, budget: b);
-            }
-          })),
+      _loadBudgetsWithSpent(uid),
       _getCategories(GetCategoriesParams(uid))
           .then((r) => r.fold((_) {}, (l) => categories.value = l)),
       _getWallets(GetAllWalletsParams(uid))
           .then((r) => r.fold((_) {}, (l) => wallets.value = l)),
     ]);
     isLoading.value = false;
+  }
+
+  Future<void> _loadBudgetsWithSpent(String uid) async {
+    final result = await _getAll(GetAllBudgetsParams(uid));
+    if (result.isLeft()) return;
+    final list = result.getOrElse(() => []);
+    budgets.value = list;
+    for (final b in list) {
+      budgetSpent[b.id] = await _budgetDs.getSpentAmount(userId: uid, budget: b);
+    }
+    rolloverAmounts.clear();
+    for (final b in list.where((b) => b.rollover)) {
+      final prevSpent = await _budgetDs.getPreviousPeriodSpent(
+        userId: uid,
+        budget: b,
+      );
+      final carryOver = (b.amount - prevSpent).clamp(0.0, double.infinity);
+      if (carryOver > 0) rolloverAmounts[b.id] = carryOver;
+    }
+    alertBudgets.value = list.where((b) {
+      final limit = effectiveLimitFor(b);
+      if (limit <= 0) return false;
+      return spentFor(b) / limit * 100 >= b.alertAtPercent;
+    }).toList();
   }
 
   void initForm([BudgetEntity? existing]) {
