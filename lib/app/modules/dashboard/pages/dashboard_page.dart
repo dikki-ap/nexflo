@@ -263,33 +263,37 @@ class _PlanningSection extends StatelessWidget {
         const Text('Planning',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _PlanningCard(
-                icon: Icons.pie_chart_outline,
-                label: 'Budgets',
-                color: AppColors.blue,
-                route: AppRoutes.budgets,
-              ),
+        GridView.count(
+          crossAxisCount: 4,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 0,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 0.95,
+          children: const [
+            _PlanningCard(
+              icon: Icons.pie_chart_outline,
+              label: 'Budgets',
+              color: AppColors.blue,
+              route: AppRoutes.budgets,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _PlanningCard(
-                icon: Icons.flag_outlined,
-                label: 'Goals',
-                color: AppColors.green,
-                route: AppRoutes.goals,
-              ),
+            _PlanningCard(
+              icon: Icons.flag_outlined,
+              label: 'Goals',
+              color: AppColors.green,
+              route: AppRoutes.goals,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _PlanningCard(
-                icon: Icons.handshake_outlined,
-                label: 'Debts',
-                color: AppColors.orange,
-                route: AppRoutes.debts,
-              ),
+            _PlanningCard(
+              icon: Icons.handshake_outlined,
+              label: 'Debts',
+              color: AppColors.orange,
+              route: AppRoutes.debts,
+            ),
+            _PlanningCard(
+              icon: Icons.repeat_outlined,
+              label: 'Recurring',
+              color: AppColors.teal,
+              route: AppRoutes.recurring,
             ),
           ],
         ),

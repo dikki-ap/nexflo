@@ -30,6 +30,11 @@ import '../../modules/debt/bindings/debt_binding.dart';
 import '../../modules/debt/pages/debt_list_page.dart';
 import '../../modules/debt/pages/debt_form_page.dart';
 import '../../modules/debt/pages/debt_detail_page.dart';
+import '../../modules/statistics/bindings/statistics_binding.dart';
+import '../../modules/statistics/pages/statistics_page.dart';
+import '../../modules/recurring/bindings/recurring_binding.dart';
+import '../../modules/recurring/pages/recurring_list_page.dart';
+import '../../modules/recurring/pages/recurring_form_page.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -160,6 +165,23 @@ class AppPages {
       name: AppRoutes.debtDetail,
       page: () => const DebtDetailPage(),
       binding: DebtBinding(),
+    ),
+    // Statistics
+    GetPage(
+      name: AppRoutes.statistics,
+      page: () => const StatisticsPage(),
+      binding: StatisticsBinding(),
+    ),
+    // Recurring
+    GetPage(
+      name: AppRoutes.recurring,
+      page: () => const RecurringListPage(),
+      binding: RecurringBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.recurringAdd,
+      page: () => const RecurringFormPage(),
+      binding: RecurringBinding(),
     ),
   ];
 }

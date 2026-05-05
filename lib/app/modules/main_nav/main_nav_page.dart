@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
 import '../transaction/pages/transaction_list_page.dart';
+import '../statistics/pages/statistics_page.dart';
 import '../../../config/routes/app_routes.dart';
 import 'main_nav_controller.dart';
 
@@ -16,7 +17,7 @@ class MainNavPage extends GetView<MainNavController> {
             children: const [
               DashboardPage(),
               TransactionListPage(),
-              _PlaceholderPage('Statistics'),
+              StatisticsPage(),
               _PlaceholderPage('Settings'),
             ],
           ),
