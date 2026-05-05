@@ -31,7 +31,10 @@ class SplashController extends GetxController {
       return;
     }
 
-    // TODO(phase-6): check biometric/PIN lock
+    if (settings.isBiometricEnabled || settings.isPinEnabled) {
+      Get.offAllNamed(AppRoutes.lock);
+      return;
+    }
     Get.offAllNamed(AppRoutes.main);
   }
 }

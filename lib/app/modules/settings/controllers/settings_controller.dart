@@ -1,11 +1,23 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import '../../../config/theme/app_theme_controller.dart';
 import '../../../core/enums/theme_color.dart';
 import '../../../data/datasources/local/currency_local_ds.dart';
 import '../../../data/datasources/local/settings_local_ds.dart';
+import '../../../data/datasources/local/transaction_local_ds.dart';
+import '../../../data/datasources/local/wallet_local_ds.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/models/settings_model.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/biometric_service.dart';
 import '../../../services/currency_service.dart';
 import '../../../services/sync_service.dart';
 
@@ -76,8 +88,7 @@ class SettingsController extends GetxController {
     await _settingsDs.update(updated);
     settings.value = updated;
 
-    final themeCtrl = Get.find<dynamic>(tag: 'AppThemeController');
-    themeCtrl.setThemeMode(_themeModeFrom(mode));
+    Get.find<AppThemeController>().setThemeMode(_themeModeFrom(mode));
   }
 
   Future<void> updateThemeColor(ThemeColor color) async {
@@ -170,6 +181,209 @@ class SettingsController extends GetxController {
       _auth.clearUser();
       Get.offAllNamed('/login');
     }
+  }
+
+  // ── Security ────────────────────────────────────────────
+
+  bool get isBiometricAvailable => Get.find<BiometricService>().isAvailable;
+
+  Future<void> toggleBiometric(bool value) async {
+    if (settings.value == null) return;
+    if (value && !isBiometricAvailable) {
+      Get.snackbar('Not Available', 'Biometric authentication is not set up on this device',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final updated = settings.value!.copyWith(isBiometricEnabled: value);
+    await _settingsDs.update(updated);
+    settings.value = updated;
+  }
+
+  Future<void> setupPin(String pin) async {
+    if (settings.value == null) return;
+    if (pin.length < 4) {
+      Get.snackbar('Error', 'PIN must be at least 4 digits',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final hash = sha256.convert(utf8.encode(pin)).toString();
+    final updated = settings.value!.copyWith(
+      isPinEnabled: true,
+      pinHash: hash,
+    );
+    await _settingsDs.update(updated);
+    settings.value = updated;
+    Get.snackbar('Success', 'PIN set successfully',
+        snackPosition: SnackPosition.BOTTOM);
+  }
+
+  Future<void> removePin() async {
+    if (settings.value == null) return;
+    final updated = settings.value!.copyWith(
+      isPinEnabled: false,
+      pinHash: '',
+    );
+    await _settingsDs.update(updated);
+    settings.value = updated;
+    Get.snackbar('PIN Removed', 'PIN lock has been disabled',
+        snackPosition: SnackPosition.BOTTOM);
+  }
+
+  bool verifyPin(String pin) {
+    final stored = settings.value?.pinHash;
+    if (stored == null || stored.isEmpty) return false;
+    return sha256.convert(utf8.encode(pin)).toString() == stored;
+  }
+
+  // ── Data Management ──────────────────────────────────────
+
+  Future<void> exportPdf() async {
+    if (userId == null) return;
+    final db = Get.find<AppDatabase>();
+    final txDs = TransactionLocalDataSource(db);
+    final walletDs = WalletLocalDataSource(db);
+
+    final transactions = await txDs.getAll(userId!);
+    final wallets = await walletDs.getAll(userId!);
+
+    final doc = pw.Document();
+    final dateStr = DateFormat('dd MMM yyyy').format(DateTime.now());
+
+    doc.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      build: (_) => [
+        pw.Header(level: 0, child: pw.Text('NexFlo — Financial Summary')),
+        pw.Paragraph(text: 'Generated: $dateStr'),
+        pw.SizedBox(height: 12),
+        pw.Header(level: 1, child: pw.Text('Wallets')),
+        pw.Table.fromTextArray(
+          headers: ['Name', 'Type', 'Currency', 'Balance'],
+          data: wallets.map((w) => [
+            w.name, w.type, w.currencyCode,
+            w.balance.toStringAsFixed(2),
+          ]).toList(),
+        ),
+        pw.SizedBox(height: 16),
+        pw.Header(level: 1, child: pw.Text('Recent Transactions')),
+        pw.Table.fromTextArray(
+          headers: ['Date', 'Type', 'Amount', 'Note'],
+          data: transactions.take(100).map((t) => [
+            DateFormat('dd/MM/yy').format(t.date),
+            t.type.name,
+            t.amount.toStringAsFixed(2),
+            t.note ?? '',
+          ]).toList(),
+        ),
+      ],
+    ));
+
+    await Printing.layoutPdf(onLayout: (_) async => doc.save());
+  }
+
+  Future<void> exportJson() async {
+    if (userId == null) return;
+    final db = Get.find<AppDatabase>();
+    final txDs = TransactionLocalDataSource(db);
+    final walletDs = WalletLocalDataSource(db);
+
+    final transactions = await txDs.getAll(userId!);
+    final wallets = await walletDs.getAll(userId!);
+
+    final data = {
+      'exported_at': DateTime.now().toIso8601String(),
+      'version': '1.0.0',
+      'wallets': wallets.map((w) => {
+        'id': w.id,
+        'name': w.name,
+        'type': w.type,
+        'balance': w.balance,
+        'currency_code': w.currencyCode,
+      }).toList(),
+      'transactions': transactions.map((t) => {
+        'id': t.id,
+        'wallet_id': t.walletId,
+        'type': t.type.name,
+        'amount': t.amount,
+        'date': t.date.toIso8601String(),
+        'note': t.note,
+        'category_id': t.categoryId,
+      }).toList(),
+    };
+
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+    final dir = await getApplicationDocumentsDirectory();
+    final file = '${dir.path}/nexflo_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+
+    await Printing.sharePdf(
+      bytes: utf8.encode(jsonStr),
+      filename: 'nexflo_backup.json',
+    );
+
+    Get.snackbar('Exported', 'Backup saved', snackPosition: SnackPosition.BOTTOM);
+  }
+
+  Future<void> clearAllData() async {
+    final first = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Clear All Data'),
+        content: const Text('This will permanently delete ALL your data. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Continue', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (first != true) return;
+
+    final second = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Are you sure?'),
+        content: const Text('All wallets, transactions, budgets, goals and debts will be deleted.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Yes, delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (second != true) return;
+
+    final third = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Final Confirmation'),
+        content: const Text('Type "DELETE" to confirm.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('DELETE EVERYTHING', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (third != true) return;
+
+    final db = Get.find<AppDatabase>();
+    await db.transaction(() async {
+      await db.delete(db.transactions).go();
+      await db.delete(db.wallets).go();
+      await db.delete(db.budgets).go();
+      await db.delete(db.goals).go();
+      await db.delete(db.debts).go();
+      await db.delete(db.debtPayments).go();
+      await db.delete(db.recurringTransactions).go();
+      await db.delete(db.syncQueue).go();
+    });
+
+    Get.snackbar('Cleared', 'All data has been deleted',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white);
   }
 
   ThemeMode _themeModeFrom(String value) {

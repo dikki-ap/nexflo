@@ -6,6 +6,8 @@ import '../../modules/auth/bindings/auth_binding.dart';
 import '../../modules/auth/pages/login_page.dart';
 import '../../modules/onboarding/bindings/onboarding_binding.dart';
 import '../../modules/onboarding/pages/onboarding_page.dart';
+import '../../modules/lock/lock_binding.dart';
+import '../../modules/lock/lock_page.dart';
 import '../../modules/main_nav/main_nav_binding.dart';
 import '../../modules/main_nav/main_nav_page.dart';
 import '../../modules/wallet/bindings/wallet_binding.dart';
@@ -39,6 +41,10 @@ import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/pages/settings_page.dart';
 import '../../modules/settings/pages/sync_settings_page.dart';
 import '../../modules/settings/pages/currency_settings_page.dart';
+import '../../modules/settings/pages/theme_settings_page.dart';
+import '../../modules/settings/pages/security_settings_page.dart';
+import '../../modules/transaction/pages/receipt_scan_page.dart';
+import '../../modules/transaction/bindings/transaction_binding.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -59,6 +65,11 @@ class AppPages {
       name: AppRoutes.onboarding,
       page: () => const OnboardingPage(),
       binding: OnboardingBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.lock,
+      page: () => const LockPage(),
+      binding: LockBinding(),
     ),
     GetPage(
       name: AppRoutes.main,
@@ -202,6 +213,22 @@ class AppPages {
       name: AppRoutes.settingsCurrency,
       page: () => const CurrencySettingsPage(),
       binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.settingsTheme,
+      page: () => const ThemeSettingsPage(),
+      binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.settingsSecurity,
+      page: () => const SecuritySettingsPage(),
+      binding: SettingsBinding(),
+    ),
+    // Receipt scan
+    GetPage(
+      name: AppRoutes.receiptScan,
+      page: () => const ReceiptScanPage(),
+      binding: TransactionBinding(),
     ),
   ];
 }

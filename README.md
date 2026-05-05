@@ -11,7 +11,7 @@ A personal finance management app built with Flutter. Track your income, expense
 ![Flutter](https://img.shields.io/badge/Flutter-3.29.x-02569B?style=flat-square&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.7.x-0175C2?style=flat-square&logo=dart&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-00BCD4?style=flat-square)
-![Status](https://img.shields.io/badge/Status-In%20Development-FFC107?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Complete-00BCD4?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-brightgreen?style=flat-square)
 
 ---
@@ -338,29 +338,29 @@ NexFlo uses the [Frankfurter API](https://frankfurter.app) — a free, open-sour
 
 ## 📋 Roadmap
 
-### Phase 1 — Foundation ✅ _planned_
+### Phase 1 — Foundation ✅
 
 - Project setup, Drift DB, GetX routing, theme system, auth, onboarding, splash
 
-### Phase 2 — Core Features 🔄 _in progress_
+### Phase 2 — Core Features ✅
 
 - Wallet management, transaction CRUD, category management, dashboard
 
-### Phase 3 — Planning Features 📅 _upcoming_
+### Phase 3 — Planning Features ✅
 
 - Budget tracking, savings goals, debt management
 
-### Phase 4 — Analytics 📅 _upcoming_
+### Phase 4 — Analytics ✅
 
 - Statistics page, all charts, recurring transactions, CSV export
 
-### Phase 5 — Sync & Currency 📅 _upcoming_
+### Phase 5 — Sync & Currency ✅
 
-- Google Sheets sync engine, multi-currency support
+- Google Sheets sync engine, multi-currency support, settings page
 
-### Phase 6 — Smart Features 📅 _upcoming_
+### Phase 6 — Smart Features ✅
 
-- OCR receipt scanning, biometric/PIN lock, notifications, PDF export, polish
+- OCR receipt scanning, biometric/PIN lock, notifications, PDF export, security settings, theme settings, polish
 
 ---
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../core/enums/filter_period.dart';
 import '../../../core/enums/transaction_type.dart';
@@ -42,6 +43,7 @@ class TransactionController extends GetxController {
   final selectedToWalletId = Rxn<String>();
   final selectedCategoryId = Rxn<String>();
   final selectedDate = DateTime.now().obs;
+  final receiptImagePath = Rxn<String>();
 
   // Summary
   final totalIncome = 0.0.obs;
@@ -160,6 +162,7 @@ class TransactionController extends GetxController {
       selectedToWalletId.value = existing.toWalletId;
       selectedCategoryId.value = existing.categoryId;
       selectedDate.value = existing.date;
+      receiptImagePath.value = existing.receiptImagePath;
     } else {
       amountCtrl.clear();
       noteCtrl.clear();
@@ -167,8 +170,23 @@ class TransactionController extends GetxController {
       selectedDate.value = DateTime.now();
       selectedCategoryId.value = null;
       selectedToWalletId.value = null;
+      receiptImagePath.value = null;
       if (wallets.isNotEmpty) selectedWalletId.value = wallets.first.id;
     }
+  }
+
+  void prefillFromReceipt(dynamic ocrResult) {
+    if (ocrResult == null) return;
+    if (ocrResult.amount != null) {
+      amountCtrl.text = ocrResult.amount!.toStringAsFixed(2);
+    }
+    if (ocrResult.date != null) {
+      selectedDate.value = ocrResult.date!;
+    }
+    if (ocrResult.merchant != null && noteCtrl.text.isEmpty) {
+      noteCtrl.text = ocrResult.merchant!;
+    }
+    receiptImagePath.value = ocrResult.rawText.isNotEmpty ? null : null;
   }
 
   Future<void> saveTransaction([TransactionEntity? existing]) async {
@@ -226,11 +244,13 @@ class TransactionController extends GetxController {
       r.fold((f) => Get.snackbar('Error', f.message), (_) {});
     }
     isLoading.value = false;
+    HapticFeedback.mediumImpact();
     await loadTransactions();
     Get.back();
   }
 
   Future<void> deleteTransaction(String id) async {
+    HapticFeedback.mediumImpact();
     final r = await _delete(DeleteTransactionParams(id));
     r.fold(
       (f) => Get.snackbar('Error', f.message),

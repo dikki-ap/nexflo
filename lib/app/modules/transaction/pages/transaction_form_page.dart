@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/transaction_controller.dart';
+import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/transaction_type.dart';
 import '../../../domain/entities/transaction_entity.dart';
+import '../../../services/ocr_service.dart';
 
 class TransactionFormPage extends GetView<TransactionController> {
   const TransactionFormPage({super.key});
@@ -16,6 +18,19 @@ class TransactionFormPage extends GetView<TransactionController> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Transaction' : 'New Transaction'),
+        actions: [
+          if (!isEdit)
+            IconButton(
+              icon: const Icon(Icons.document_scanner_outlined),
+              tooltip: 'Scan Receipt',
+              onPressed: () async {
+                final result = await Get.toNamed(AppRoutes.receiptScan);
+                if (result is OcrParseResult) {
+                  controller.prefillFromReceipt(result);
+                }
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [

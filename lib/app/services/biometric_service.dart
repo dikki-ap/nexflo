@@ -1,15 +1,36 @@
 import 'package:get/get.dart';
+import 'package:local_auth/local_auth.dart';
 
 class BiometricService extends GetxService {
+  final _localAuth = LocalAuthentication();
+  final _isSupported = false.obs;
   final _isAvailable = false.obs;
+
+  bool get isSupported => _isSupported.value;
   bool get isAvailable => _isAvailable.value;
 
   Future<BiometricService> init() async {
-    // TODO(phase-6): check local_auth availability
+    _isSupported.value = await _localAuth.isDeviceSupported();
+    if (_isSupported.value) {
+      _isAvailable.value = await _localAuth.canCheckBiometrics;
+    }
     return this;
   }
 
-  // TODO(phase-6): implement biometric + PIN authentication
-  Future<bool> authenticate({String reason = 'Authenticate to continue'}) async =>
-      true;
+  Future<bool> authenticate({
+    String reason = 'Authenticate to continue',
+  }) async {
+    if (!_isSupported.value) return false;
+    try {
+      return await _localAuth.authenticate(
+        localizedReason: reason,
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
 }

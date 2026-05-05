@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
 import '../controllers/settings_controller.dart';
+// ignore: unused_import
+import '../pages/theme_settings_page.dart';
+// ignore: unused_import
+import '../pages/security_settings_page.dart';
 
 class SettingsPage extends GetView<SettingsController> {
   const SettingsPage({super.key});
@@ -22,9 +26,15 @@ class SettingsPage extends GetView<SettingsController> {
             const Divider(height: 1),
             _PreferencesSection(controller),
             const Divider(height: 1),
+            _ThemeSection(controller),
+            const Divider(height: 1),
+            _SecuritySection(controller),
+            const Divider(height: 1),
             _SyncSection(controller),
             const Divider(height: 1),
             _NotificationsSection(controller),
+            const Divider(height: 1),
+            _DataSection(controller),
             const Divider(height: 1),
             _AboutSection(),
           ],
@@ -245,6 +255,84 @@ class _NotificationsSection extends StatelessWidget {
         ],
       );
     });
+  }
+}
+
+class _ThemeSection extends StatelessWidget {
+  final SettingsController ctrl;
+  const _ThemeSection(this.ctrl);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Theme'),
+        ListTile(
+          leading: const Icon(Icons.palette_outlined),
+          title: const Text('Appearance & Colors'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Get.toNamed(AppRoutes.settingsTheme),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecuritySection extends StatelessWidget {
+  final SettingsController ctrl;
+  const _SecuritySection(this.ctrl);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Security'),
+        ListTile(
+          leading: const Icon(Icons.security_outlined),
+          title: const Text('Biometric & PIN Lock'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Get.toNamed(AppRoutes.settingsSecurity),
+        ),
+      ],
+    );
+  }
+}
+
+class _DataSection extends StatelessWidget {
+  final SettingsController ctrl;
+  const _DataSection(this.ctrl);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader('Data'),
+        ListTile(
+          leading: const Icon(Icons.picture_as_pdf_outlined),
+          title: const Text('Export PDF'),
+          subtitle: const Text('Summary report'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: ctrl.exportPdf,
+        ),
+        ListTile(
+          leading: const Icon(Icons.download_outlined),
+          title: const Text('Export JSON'),
+          subtitle: const Text('Full backup'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: ctrl.exportJson,
+        ),
+        ListTile(
+          leading: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
+          title: const Text('Clear All Data',
+              style: TextStyle(color: Colors.red)),
+          subtitle: const Text('Permanently delete everything'),
+          onTap: ctrl.clearAllData,
+        ),
+      ],
+    );
   }
 }
 
