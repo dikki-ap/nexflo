@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
 import '../controllers/settings_controller.dart';
-// ignore: unused_import
-import '../pages/theme_settings_page.dart';
-// ignore: unused_import
-import '../pages/security_settings_page.dart';
 
 class SettingsPage extends GetView<SettingsController> {
   const SettingsPage({super.key});

@@ -67,10 +67,6 @@ class SecuritySettingsPage extends GetView<SettingsController> {
   }
 
   void _showPinSetup(BuildContext context, {bool isChange = false}) {
-    final pinCtrl = TextEditingController();
-    final confirmCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
     if (isChange) {
       showDialog(
         context: context,

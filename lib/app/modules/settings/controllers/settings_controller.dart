@@ -1,14 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../../config/theme/app_theme_controller.dart';
+import '../../../core/enums/filter_period.dart';
 import '../../../core/enums/theme_color.dart';
 import '../../../data/datasources/local/currency_local_ds.dart';
 import '../../../data/datasources/local/settings_local_ds.dart';
@@ -243,8 +244,11 @@ class SettingsController extends GetxController {
     final txDs = TransactionLocalDataSource(db);
     final walletDs = WalletLocalDataSource(db);
 
-    final transactions = await txDs.getAll(userId!);
-    final wallets = await walletDs.getAll(userId!);
+    final transactions = await txDs.getByFilter(
+      userId: userId!,
+      period: FilterPeriod.allTime,
+    );
+    final wallets = await walletDs.getAllByUserId(userId!);
 
     final doc = pw.Document();
     final dateStr = DateFormat('dd MMM yyyy').format(DateTime.now());
@@ -286,8 +290,11 @@ class SettingsController extends GetxController {
     final txDs = TransactionLocalDataSource(db);
     final walletDs = WalletLocalDataSource(db);
 
-    final transactions = await txDs.getAll(userId!);
-    final wallets = await walletDs.getAll(userId!);
+    final transactions = await txDs.getByFilter(
+      userId: userId!,
+      period: FilterPeriod.allTime,
+    );
+    final wallets = await walletDs.getAllByUserId(userId!);
 
     final data = {
       'exported_at': DateTime.now().toIso8601String(),
@@ -311,14 +318,8 @@ class SettingsController extends GetxController {
     };
 
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
-    final dir = await getApplicationDocumentsDirectory();
-    final file = '${dir.path}/nexflo_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-
-    await Printing.sharePdf(
-      bytes: utf8.encode(jsonStr),
-      filename: 'nexflo_backup.json',
-    );
-
+    final bytes = Uint8List.fromList(utf8.encode(jsonStr));
+    await Printing.sharePdf(bytes: bytes, filename: 'nexflo_backup.json');
     Get.snackbar('Exported', 'Backup saved', snackPosition: SnackPosition.BOTTOM);
   }
 
