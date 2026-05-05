@@ -19,6 +19,17 @@ import '../../modules/transaction/bindings/transaction_binding.dart';
 import '../../modules/transaction/pages/transaction_list_page.dart';
 import '../../modules/transaction/pages/transaction_form_page.dart';
 import '../../modules/transaction/pages/transaction_detail_page.dart';
+import '../../modules/budget/bindings/budget_binding.dart';
+import '../../modules/budget/pages/budget_list_page.dart';
+import '../../modules/budget/pages/budget_form_page.dart';
+import '../../modules/goal/bindings/goal_binding.dart';
+import '../../modules/goal/pages/goal_list_page.dart';
+import '../../modules/goal/pages/goal_form_page.dart';
+import '../../modules/goal/pages/goal_detail_page.dart';
+import '../../modules/debt/bindings/debt_binding.dart';
+import '../../modules/debt/pages/debt_list_page.dart';
+import '../../modules/debt/pages/debt_form_page.dart';
+import '../../modules/debt/pages/debt_detail_page.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -101,6 +112,54 @@ class AppPages {
       name: AppRoutes.transactionEdit,
       page: () => const TransactionFormPage(),
       binding: TransactionBinding(),
+    ),
+    // Budgets
+    GetPage(
+      name: AppRoutes.budgets,
+      page: () => const BudgetListPage(),
+      binding: BudgetBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.budgetAdd,
+      page: () => const BudgetFormPage(),
+      binding: BudgetBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.budgetEdit,
+      page: () => const BudgetFormPage(),
+      binding: BudgetBinding(),
+    ),
+    // Goals
+    GetPage(
+      name: AppRoutes.goals,
+      page: () => const GoalListPage(),
+      binding: GoalBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.goalAdd,
+      page: () => const GoalFormPage(),
+      binding: GoalBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.goalDetail,
+      page: () => const GoalDetailPage(),
+      binding: GoalBinding(),
+    ),
+    // Debts
+    GetPage(
+      name: AppRoutes.debts,
+      page: () => const DebtListPage(),
+      binding: DebtBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.debtAdd,
+      page: () => const DebtFormPage(),
+      binding: DebtBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.debtDetail,
+      page: () => const DebtDetailPage(),
+      binding: DebtBinding(),
     ),
   ];
 }

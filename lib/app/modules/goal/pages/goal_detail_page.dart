@@ -1,0 +1,240 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../config/routes/app_routes.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/enums/goal_status.dart';
+import '../../../core/utils/color_helper.dart';
+import '../../../core/utils/icon_mapper.dart';
+import '../../../domain/entities/goal_entity.dart';
+import '../controllers/goal_controller.dart';
+
+class GoalDetailPage extends GetView<GoalController> {
+  const GoalDetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final goal = Get.arguments as GoalEntity;
+    final color = ColorHelper.fromHex(goal.colorHex);
+    final isDone = goal.status == GoalStatus.completed;
+    final onTrack = controller.onTrackLabel(goal);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(goal.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () {
+              controller.initForm(goal);
+              Get.toNamed(AppRoutes.goalAdd, arguments: goal);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _confirmDelete(context, goal),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Hero progress circle
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withValues(alpha: 0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                    child: Icon(IconMapper.get(goal.iconName),
+                        color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '${_fmt(goal.currentAmount)} / ${_fmt(goal.targetAmount)}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: goal.progress,
+                      minHeight: 10,
+                      backgroundColor: Colors.white.withValues(alpha: 0.25),
+                      valueColor: const AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${(goal.progress * 100).toStringAsFixed(1)}% reached',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Info card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _InfoRow('Status', isDone ? 'Completed' : 'Active'),
+                    if (onTrack.isNotEmpty)
+                      _InfoRow('Progress', onTrack,
+                          valueColor: onTrack == 'On Track'
+                              ? AppColors.income
+                              : AppColors.budgetAlert),
+                    if (goal.daysRemaining != null)
+                      _InfoRow(
+                        'Deadline',
+                        goal.daysRemaining! >= 0
+                            ? '${goal.daysRemaining} days left'
+                            : 'Overdue',
+                        valueColor: goal.daysRemaining! < 0
+                            ? AppColors.expense
+                            : null,
+                      ),
+                    if (goal.note != null && goal.note!.isNotEmpty)
+                      _InfoRow('Note', goal.note!),
+                  ],
+                ),
+              ),
+            ),
+            if (!isDone) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => _showAllocateSheet(context, goal),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Allocate Funds'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllocateSheet(BuildContext context, GoalEntity goal) {
+    controller.allocateCtrl.clear();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Allocate Funds',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller.allocateCtrl,
+              autofocus: true,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Amount to allocate',
+                prefixIcon: Icon(Icons.attach_money),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => controller.allocate(goal),
+                child: const Text('Allocate'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, GoalEntity goal) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Goal'),
+        content: Text('Delete "${goal.name}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Get.back(), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteGoal(goal.id);
+              Get.back();
+            },
+            style:
+                FilledButton.styleFrom(backgroundColor: AppColors.expense),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmt(double v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
+    return v.toStringAsFixed(0);
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  const _InfoRow(this.label, this.value, {this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.55),
+                  fontSize: 13)),
+          Text(value,
+              style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: valueColor)),
+        ],
+      ),
+    );
+  }
+}

@@ -32,6 +32,8 @@ class DashboardPage extends GetView<DashboardController> {
               const SizedBox(height: 20),
               _WalletsSection(controller),
               const SizedBox(height: 20),
+              _PlanningSection(),
+              const SizedBox(height: 20),
               _RecentTransactionsSection(controller),
               const SizedBox(height: 80),
             ],
@@ -249,6 +251,88 @@ class _HeroStat extends StatelessWidget {
     if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
     return v.toStringAsFixed(0);
+  }
+}
+
+class _PlanningSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Planning',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _PlanningCard(
+                icon: Icons.pie_chart_outline,
+                label: 'Budgets',
+                color: AppColors.blue,
+                route: AppRoutes.budgets,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _PlanningCard(
+                icon: Icons.flag_outlined,
+                label: 'Goals',
+                color: AppColors.green,
+                route: AppRoutes.goals,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _PlanningCard(
+                icon: Icons.handshake_outlined,
+                label: 'Debts',
+                color: AppColors.orange,
+                route: AppRoutes.debts,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanningCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final String route;
+  const _PlanningCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.route,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.toNamed(route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 6),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color)),
+          ],
+        ),
+      ),
+    );
   }
 }
 
