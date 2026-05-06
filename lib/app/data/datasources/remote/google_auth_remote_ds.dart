@@ -1,5 +1,6 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../core/constants/google_services.dart';
 import '../../../core/constants/sheets_constants.dart';
 import '../../../core/errors/exceptions.dart';
 
@@ -14,7 +15,9 @@ class GoogleAuthRemoteDataSource {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(
+      serverClientId: googleServerClientId,
+    );
     GoogleSignIn.instance.authenticationEvents.listen((event) {
       switch (event) {
         case GoogleSignInAuthenticationEventSignIn():

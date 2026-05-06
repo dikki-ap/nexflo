@@ -178,13 +178,30 @@ cd nexflo
    - Fill in app name, support email
    - Add scopes: `email`, `profile`, `spreadsheets`, `drive.file`
 5. Go to **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID**
-   - Create one for **Android** (use your app's SHA-1)
+   - Create one for **Web application** — copy the Client ID (you'll need it in step 3)
+   - Create one for **Android** (use your app's SHA-1 fingerprint)
    - Create one for **iOS** (use your bundle ID)
 6. Download the config files:
    - `google-services.json` → place in `android/app/`
    - `GoogleService-Info.plist` → place in `ios/Runner/`
 
-### 3. Configure Android
+### 3. Configure Google Services
+
+```bash
+cp lib/app/core/constants/google_services.example.dart \
+   lib/app/core/constants/google_services.dart
+```
+
+Open `lib/app/core/constants/google_services.dart` and replace the placeholder with your **Web application** Client ID from step 2:
+
+```dart
+const String googleServerClientId =
+    'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+```
+
+> `google_services.dart` is gitignored — never commit it. Each developer uses their own Google Cloud project.
+
+### 4. Configure Android
 
 **`android/app/build.gradle`**
 
@@ -201,7 +218,7 @@ android {
 
 > Copy from Google Cloud Console (see step 2)
 
-### 4. Configure iOS
+### 5. Configure iOS
 
 **`ios/Runner/Info.plist`** — add OAuth URL scheme:
 
@@ -224,19 +241,19 @@ android {
 
 Minimum iOS deployment target: **13.0**
 
-### 5. Install dependencies
+### 6. Install dependencies
 
 ```bash
 flutter pub get
 ```
 
-### 6. Generate Drift database code
+### 7. Generate Drift database code
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### 7. Run the app
+### 8. Run the app
 
 ```bash
 # Debug
@@ -264,8 +281,8 @@ drift_flutter: ^0.3.0
 # Auth & Google Services
 google_sign_in: ^7.2.0
 googleapis: ^16.0.0
-googleapis_auth: ^1.6.0
-extension_google_sign_in_as_googleapis_auth: ^2.0.12
+googleapis_auth: ^2.3.0
+extension_google_sign_in_as_googleapis_auth: ^3.0.0
 
 # Charts
 fl_chart: ^1.2.0
@@ -282,8 +299,8 @@ workmanager: ^0.9.0+3
 # Utilities
 uuid: ^4.5.1
 intl: ^0.20.2
-connectivity_plus: ^6.1.3
-flutter_secure_storage: ^9.2.4
+connectivity_plus: ^7.1.1
+flutter_secure_storage: ^10.0.0
 ```
 
 > See [`pubspec.yaml`](pubspec.yaml) for the full list.

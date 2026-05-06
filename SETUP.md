@@ -26,17 +26,38 @@ In `android/app/build.gradle`, change:
 minSdkVersion 24
 ```
 
-### 4. Install dependencies
+### 4. Configure Google Services
+
+```bash
+cp lib/app/core/constants/google_services.example.dart \
+   lib/app/core/constants/google_services.dart
+```
+
+Open `lib/app/core/constants/google_services.dart` and fill in your **Web application** OAuth Client ID from Google Cloud Console:
+
+```dart
+const String googleServerClientId =
+    'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+```
+
+**Where to find it:**
+- Google Cloud Console → APIs & Services → Credentials
+- Under "OAuth 2.0 Client IDs", find or create type **Web application**
+- Copy the Client ID
+
+> This file is gitignored. Do not commit it.
+
+### 5. Install dependencies
 ```bash
 flutter pub get
 ```
 
-### 5. Generate Drift database code
+### 6. Generate Drift database code
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### 6. Run the app
+### 7. Run the app
 ```bash
 flutter run
 ```
@@ -44,4 +65,5 @@ flutter run
 ## Notes
 - `lib/app/data/database/app_database.g.dart` is generated — do not edit manually
 - All generated `.g.dart` files are git-ignored
+- `google_services.dart` is git-ignored — never commit it
 - See `plans/plan.md` for full architecture documentation
