@@ -37,7 +37,6 @@ class GoogleAuthRemoteDataSource {
       await Future<void>.delayed(Duration.zero);
       final account = _currentAccount;
       if (account == null) throw const AuthException('Sign in failed');
-      await account.authorizationClient.authorizeScopes(scopes);
       return account;
     } on AuthException {
       rethrow;
