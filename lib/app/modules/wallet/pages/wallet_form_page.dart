@@ -120,11 +120,6 @@ class WalletFormPage extends GetView<WalletController> {
                       ],
                     );
                   }),
-                  Divider(
-                    height: 1,
-                    color: isDark ? AppColors.glassBorder : AppColors.grey200,
-                  ),
-                  _CurrencyPicker(controller),
                 ],
               ),
             ),
@@ -184,36 +179,6 @@ class WalletFormPage extends GetView<WalletController> {
         ),
       ),
     );
-  }
-}
-
-class _CurrencyPicker extends StatelessWidget {
-  final WalletController ctrl;
-  const _CurrencyPicker(this.ctrl);
-
-  static const _currencies = [
-    'IDR', 'USD', 'EUR', 'GBP', 'JPY', 'SGD', 'MYR',
-    'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'KRW', 'INR',
-    'THB', 'PHP', 'VND', 'TWD', 'NZD', 'AED',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() => DropdownButtonFormField<String>(
-          value: ctrl.selectedCurrency.value,
-          items: _currencies
-              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-              .toList(),
-          onChanged: (v) => ctrl.selectedCurrency.value = v!,
-          decoration: const InputDecoration(
-            labelText: 'Currency',
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ));
   }
 }
 

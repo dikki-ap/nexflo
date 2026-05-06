@@ -120,8 +120,7 @@ class TransactionFormPage extends GetView<TransactionController> {
                               items: controller.wallets
                                   .map((w) => DropdownMenuItem(
                                       value: w.id,
-                                      child: Text(
-                                          '${w.name} (${w.currencyCode})')))
+                                      child: Text(w.name)))
                                   .toList(),
                               onChanged: (v) =>
                                   controller.selectedWalletId.value = v,

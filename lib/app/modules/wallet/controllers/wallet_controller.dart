@@ -17,6 +17,7 @@ import '../../../domain/usecases/wallet/reorder_wallets_usecase.dart';
 import '../../../domain/usecases/wallet/adjust_wallet_balance_usecase.dart';
 import '../../../domain/usecases/transaction/create_transaction_usecase.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/currency_service.dart';
 
 class WalletController extends GetxController {
   final wallets = <WalletEntity>[].obs;
@@ -29,7 +30,6 @@ class WalletController extends GetxController {
   final selectedType = WalletType.cash.obs;
   final selectedColor = AppColors.teal.obs;
   final selectedIcon = 'wallet'.obs;
-  final selectedCurrency = 'IDR'.obs;
   final isExcludeTotal = false.obs;
 
   late final GetAllWalletsUseCase _getAll;
@@ -41,6 +41,7 @@ class WalletController extends GetxController {
   late final CreateTransactionUseCase _createTx;
 
   String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
+  String get _baseCurrency => Get.find<CurrencyService>().baseCurrency;
 
   @override
   void onInit() {
@@ -88,7 +89,6 @@ class WalletController extends GetxController {
       selectedType.value = existing.type;
       selectedColor.value = _colorFromHex(existing.colorHex);
       selectedIcon.value = existing.iconName;
-      selectedCurrency.value = existing.currencyCode;
       isExcludeTotal.value = existing.isExcludeTotal;
     } else {
       nameCtrl.clear();
@@ -97,7 +97,6 @@ class WalletController extends GetxController {
       selectedType.value = WalletType.cash;
       selectedColor.value = AppColors.teal;
       selectedIcon.value = 'wallet';
-      selectedCurrency.value = 'IDR';
       isExcludeTotal.value = false;
     }
   }
@@ -117,7 +116,7 @@ class WalletController extends GetxController {
         type: selectedType.value.value,
         colorHex: _hexFromColor(selectedColor.value),
         iconName: selectedIcon.value,
-        currencyCode: selectedCurrency.value,
+        currencyCode: _baseCurrency,
         initialBalance: double.tryParse(balanceCtrl.text) ?? 0,
         creditLimit: creditLimitCtrl.text.isNotEmpty
             ? double.tryParse(creditLimitCtrl.text)
@@ -136,7 +135,7 @@ class WalletController extends GetxController {
         iconName: selectedIcon.value,
         isExcludeTotal: isExcludeTotal.value,
         balance: double.tryParse(balanceCtrl.text) ?? existing.balance,
-        currencyCode: selectedCurrency.value,
+        currencyCode: _baseCurrency,
         type: selectedType.value,
       );
       final result = await _update(updated);

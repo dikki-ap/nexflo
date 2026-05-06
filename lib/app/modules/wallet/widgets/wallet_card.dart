@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/icon_mapper.dart';
 import '../../../domain/entities/wallet_entity.dart';
+import '../../../services/currency_service.dart';
 
 class WalletCard extends StatelessWidget {
   final WalletEntity wallet;
@@ -66,7 +68,7 @@ class WalletCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${wallet.currencyCode} ${_formatBalance(wallet.balance)}',
+                    '${Get.find<CurrencyService>().baseCurrency} ${_formatBalance(wallet.balance)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

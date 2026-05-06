@@ -10,6 +10,7 @@ import '../../../core/widgets/animated_amount.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/nexflo_button.dart';
 import '../../../domain/entities/wallet_entity.dart';
+import '../../../services/currency_service.dart';
 
 class WalletDetailPage extends StatelessWidget {
   const WalletDetailPage({super.key});
@@ -154,14 +155,14 @@ class WalletDetailPage extends StatelessWidget {
                         ),
                         _InfoRow(
                           label: 'Currency',
-                          value: wallet.currencyCode,
+                          value: Get.find<CurrencyService>().baseCurrency,
                           isDark: isDark,
                         ),
                         if (wallet.creditLimit != null)
                           _InfoRow(
                             label: 'Credit Limit',
                             value:
-                                '${wallet.currencyCode} ${wallet.creditLimit!.toStringAsFixed(2)}',
+                                '${Get.find<CurrencyService>().baseCurrency} ${wallet.creditLimit!.toStringAsFixed(2)}',
                             isDark: isDark,
                           ),
                         _InfoRow(

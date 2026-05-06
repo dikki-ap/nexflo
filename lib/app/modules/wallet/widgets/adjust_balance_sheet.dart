@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../domain/entities/wallet_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/wallet_controller.dart';
 
 class AdjustBalanceSheet extends StatefulWidget {
@@ -51,7 +52,7 @@ class _AdjustBalanceSheetState extends State<AdjustBalanceSheet> {
                 const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: 'New Balance',
-              prefixText: '${widget.wallet.currencyCode} ',
+              prefixText: '${Get.find<CurrencyService>().baseCurrency} ',
               border: const OutlineInputBorder(),
             ),
             autofocus: true,
