@@ -53,10 +53,10 @@ class GoogleAuthRemoteDataSource {
 
   Future<GoogleSignInAccount?> signInSilently() async {
     try {
-      await initialize();
+      await initialize().timeout(const Duration(seconds: 10));
       final result = GoogleSignIn.instance.attemptLightweightAuthentication();
       if (result != null) {
-        await result;
+        await result.timeout(const Duration(seconds: 10));
         await Future<void>.delayed(Duration.zero);
       }
       return _currentAccount;
