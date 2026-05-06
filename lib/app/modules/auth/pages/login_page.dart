@@ -213,8 +213,8 @@ class _LoginBodyState extends State<_LoginBody> with TickerProviderStateMixin {
                               onPressed: ctrl.isLoading
                                   ? null
                                   : ctrl.signInWithGoogle,
-                              isLoading: ctrl.isLoading.value,
-                              icon: ctrl.isLoading.value ? null : Icons.login_rounded,
+                              isLoading: ctrl.isLoading,
+                              icon: ctrl.isLoading ? null : Icons.login_rounded,
                               width: double.infinity,
                             )),
                       ],

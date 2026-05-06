@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 
+// isDarkMode, theme, textTheme are provided by GetX's BuildContext extension.
+// Defining them here too causes ambiguity errors — keep them out of this file.
 extension ContextExtension on BuildContext {
-  // ── Theme shortcuts ──────────────────────────────────────
-  ThemeData get theme => Theme.of(this);
-  ColorScheme get colorScheme => Theme.of(this).colorScheme;
-  TextTheme get textTheme => Theme.of(this).textTheme;
-  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
-
   // ── Screen metrics ───────────────────────────────────────
   double get screenWidth => MediaQuery.of(this).size.width;
   double get screenHeight => MediaQuery.of(this).size.height;
@@ -20,7 +16,7 @@ extension ContextExtension on BuildContext {
   double get horizontalPadding => isSmallPhone ? 16.0 : isTablet ? 32.0 : 20.0;
   double get cardBorderRadius => isSmallPhone ? 16.0 : 20.0;
 
-  int get planningGridCount => isTablet ? 4 : isSmallPhone ? 2 : 2;
+  int get planningGridCount => isTablet ? 4 : 2;
 
   double responsiveValue(double small, double medium, {double? large}) {
     if (isSmallPhone) return small;
@@ -33,9 +29,11 @@ extension ContextExtension on BuildContext {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? colorScheme.error : null,
+        backgroundColor:
+            isError ? Theme.of(this).colorScheme.error : null,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(
           bottom: 16,
           left: horizontalPadding,
