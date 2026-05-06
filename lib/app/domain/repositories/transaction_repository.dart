@@ -34,6 +34,7 @@ abstract class TransactionRepository {
     String? receiptImagePath,
     bool isRecurring = false,
     String? recurringId,
+    bool skipBalanceUpdate = false,
   });
 
   Future<Either<Failure, TransactionEntity>> updateTransaction(

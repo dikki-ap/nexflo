@@ -195,6 +195,7 @@ class WalletController extends GetxController {
           amount: diff.abs(),
           date: DateTime.now(),
           note: 'Balance adjustment',
+          skipBalanceUpdate: true, // AdjustWalletBalanceUseCase already set the exact balance
         ));
       }
     }

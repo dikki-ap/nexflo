@@ -74,8 +74,8 @@ class TransactionController extends GetxController {
     final db = Get.find<AppDatabase>();
 
     final txDs = TransactionLocalDataSource(db);
-    final txRepo = TransactionRepositoryImpl(txDs);
     final walletDs = WalletLocalDataSource(db);
+    final txRepo = TransactionRepositoryImpl(txDs, walletDs);
     final walletRepo = WalletRepositoryImpl(walletDs);
     final catDs = CategoryLocalDataSource(db);
     final catRepo = CategoryRepositoryImpl(catDs);
@@ -232,6 +232,22 @@ class TransactionController extends GetxController {
 
     final types = ['expense', 'income', 'transfer'];
     final type = types[selectedTab.value];
+
+    // Prevent negative balance on expense / transfer.
+    if (type == 'expense' || type == 'transfer') {
+      final w = wallets.firstWhereOrNull(
+          (w) => w.id == selectedWalletId.value);
+      if (w != null && amount > w.balance) {
+        Get.snackbar(
+          'Insufficient Balance',
+          'Balance is ${w.balance.toStringAsFixed(0)}, '
+              'transaction requires ${amount.toStringAsFixed(0)}',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+        return;
+      }
+    }
 
     isLoading.value = true;
     if (existing == null) {

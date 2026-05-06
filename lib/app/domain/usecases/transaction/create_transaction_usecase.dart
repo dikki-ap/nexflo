@@ -29,6 +29,7 @@ class CreateTransactionUseCase
         receiptImagePath: params.receiptImagePath,
         isRecurring: params.isRecurring,
         recurringId: params.recurringId,
+        skipBalanceUpdate: params.skipBalanceUpdate,
       );
 }
 
@@ -49,6 +50,8 @@ class CreateTransactionParams extends Equatable {
   final bool isRecurring;
   final String? recurringId;
 
+  final bool skipBalanceUpdate;
+
   const CreateTransactionParams({
     required this.userId,
     required this.walletId,
@@ -65,6 +68,7 @@ class CreateTransactionParams extends Equatable {
     this.receiptImagePath,
     this.isRecurring = false,
     this.recurringId,
+    this.skipBalanceUpdate = false,
   });
 
   @override

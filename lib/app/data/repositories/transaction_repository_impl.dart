@@ -6,11 +6,18 @@ import '../../core/enums/transaction_type.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../datasources/local/transaction_local_ds.dart';
+import '../datasources/local/wallet_local_ds.dart';
 import '../models/transaction_model.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
   final TransactionLocalDataSource _local;
-  TransactionRepositoryImpl(this._local);
+  final WalletLocalDataSource? _walletLocal;
+
+  /// [walletLocal] is optional. When provided, wallet balances are updated
+  /// atomically with every create / update / delete. Omit it for read-only
+  /// repositories (e.g. DashboardController) or when the caller manages
+  /// balance separately (e.g. WalletController adjust-balance flow).
+  TransactionRepositoryImpl(this._local, [this._walletLocal]);
 
   @override
   Future<Either<Failure, List<TransactionEntity>>> getTransactions({
@@ -66,6 +73,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
     String? receiptImagePath,
     bool isRecurring = false,
     String? recurringId,
+    bool skipBalanceUpdate = false,
   }) async {
     try {
       final model = TransactionModel.create(
@@ -85,7 +93,12 @@ class TransactionRepositoryImpl implements TransactionRepository {
         isRecurring: isRecurring,
         recurringId: recurringId,
       );
-      return Right(await _local.insert(model));
+      final result = await _local.insert(model);
+      if (!skipBalanceUpdate && _walletLocal != null) {
+        await _applyBalance(type, walletId, toWalletId, amount,
+            isReversal: false);
+      }
+      return Right(result);
     } on LocalDatabaseException catch (e) {
       return Left(LocalDatabaseFailure(e.message));
     }
@@ -95,6 +108,17 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<Either<Failure, TransactionEntity>> updateTransaction(
       TransactionEntity transaction) async {
     try {
+      if (_walletLocal != null) {
+        // Reverse old transaction's balance effect.
+        final old = await _local.getById(transaction.id);
+        await _applyBalance(
+            old.type.value, old.walletId, old.toWalletId, old.amount,
+            isReversal: true);
+        // Apply new transaction's balance effect.
+        await _applyBalance(transaction.type.value, transaction.walletId,
+            transaction.toWalletId, transaction.amount,
+            isReversal: false);
+      }
       return Right(await _local.update(transaction));
     } on LocalDatabaseException catch (e) {
       return Left(LocalDatabaseFailure(e.message));
@@ -104,6 +128,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<Either<Failure, void>> deleteTransaction(String id) async {
     try {
+      if (_walletLocal != null) {
+        // Reverse the transaction's balance effect before soft-deleting.
+        final tx = await _local.getById(id);
+        await _applyBalance(
+            tx.type.value, tx.walletId, tx.toWalletId, tx.amount,
+            isReversal: true);
+      }
       await _local.softDelete(id);
       return const Right(null);
     } on LocalDatabaseException catch (e) {
@@ -127,6 +158,34 @@ class TransactionRepositoryImpl implements TransactionRepository {
       ));
     } on LocalDatabaseException catch (e) {
       return Left(LocalDatabaseFailure(e.message));
+    }
+  }
+
+  /// Applies or reverses a transaction's effect on wallet balance(s).
+  Future<void> _applyBalance(
+    String type,
+    String walletId,
+    String? toWalletId,
+    double amount, {
+    required bool isReversal,
+  }) async {
+    final wallet = await _walletLocal!.getById(walletId);
+    if (type == 'expense') {
+      final newBal =
+          isReversal ? wallet.balance + amount : wallet.balance - amount;
+      await _walletLocal!.updateBalance(walletId, newBal);
+    } else if (type == 'income') {
+      final newBal =
+          isReversal ? wallet.balance - amount : wallet.balance + amount;
+      await _walletLocal!.updateBalance(walletId, newBal);
+    } else if (type == 'transfer' && toWalletId != null) {
+      final toWallet = await _walletLocal!.getById(toWalletId);
+      final fromNew =
+          isReversal ? wallet.balance + amount : wallet.balance - amount;
+      final toNew =
+          isReversal ? toWallet.balance - amount : toWallet.balance + amount;
+      await _walletLocal!.updateBalance(walletId, fromNew);
+      await _walletLocal!.updateBalance(toWalletId, toNew);
     }
   }
 }
