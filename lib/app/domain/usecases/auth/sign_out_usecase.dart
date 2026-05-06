@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../../core/errors/failures.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../usecases/usecase.dart';
+import '../../../core/errors/failures.dart';
+import '../../repositories/auth_repository.dart';
+import '../usecase.dart';
 
 class SignOutUseCase extends UseCase<void, NoParams> {
   final AuthRepository repository;

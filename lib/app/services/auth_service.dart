@@ -29,7 +29,7 @@ class AuthService extends GetxService {
     final result = await _getCurrentUser(NoParams());
     result.fold(
       (_) => _currentUser.value = null,
-      (user) => _currentUser.value = user,
+      (user) => _currentUser.value = user as UserEntity?,
     );
   }
 

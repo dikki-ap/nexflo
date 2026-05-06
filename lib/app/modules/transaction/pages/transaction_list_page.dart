@@ -235,8 +235,8 @@ class _TxSearchDelegate extends SearchDelegate {
         ));
   }
 
-  void close(BuildContext context) {
+  void close(BuildContext context, dynamic result) {
     ctrl.setSearch('');
-    super.close(context, null);
+    super.close(context, result);
   }
 }

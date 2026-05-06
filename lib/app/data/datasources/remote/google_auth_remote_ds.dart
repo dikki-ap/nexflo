@@ -21,11 +21,7 @@ class GoogleAuthRemoteDataSource {
   Future<GoogleSignInAccount> signIn() async {
     try {
       await initialize();
-      final account = await GoogleSignIn.instance.signIn();
-      if (account == null) {
-        throw const AuthException('Sign in cancelled by user');
-      }
-      return account;
+      return await GoogleSignIn.instance.authenticate();
     } on AuthException {
       rethrow;
     } catch (e) {
@@ -44,12 +40,12 @@ class GoogleAuthRemoteDataSource {
   Future<GoogleSignInAccount?> signInSilently() async {
     try {
       await initialize();
-      return await GoogleSignIn.instance.signInSilently();
+      return await GoogleSignIn.instance.authenticateIfRequired();
     } catch (_) {
       return null;
     }
   }
 
-  GoogleSignInAccount? get currentAccount =>
-      GoogleSignIn.instance.currentUser;
+  Future<GoogleSignInAccount?> getCurrentAccount() =>
+      GoogleSignIn.instance.currentUser.first;
 }

@@ -6,6 +6,7 @@ import '../../../data/datasources/local/user_local_ds.dart';
 import '../../../data/datasources/remote/google_auth_remote_ds.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/repositories/auth_repository_impl.dart';
+import '../../../domain/entities/user_entity.dart';
 import '../../../domain/usecases/auth/sign_in_google_usecase.dart';
 import '../../../domain/usecases/auth/sign_out_usecase.dart';
 import '../../../domain/usecases/usecase.dart';
@@ -40,9 +41,9 @@ class AuthController extends GetxController {
     final result = await _signIn(NoParams());
 
     result.fold(
-      (failure) => _error.value = failure.message,
+      (failure) => _error.value = (failure).message,
       (user) async {
-        Get.find<AuthService>().setUser(user);
+        Get.find<AuthService>().setUser(user as UserEntity);
 
         final db = Get.find<AppDatabase>();
         final settingsDs = SettingsLocalDataSource(db);

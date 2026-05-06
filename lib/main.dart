@@ -36,7 +36,7 @@ void main() async {
     'backgroundSync',
     frequency: const Duration(minutes: 30),
     constraints: Constraints(networkType: NetworkType.connected),
-    existingWorkPolicy: ExistingWorkPolicy.keep,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
   );
 
   await _initServices();

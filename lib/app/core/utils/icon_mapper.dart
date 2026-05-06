@@ -4,7 +4,7 @@ class IconMapper {
   IconMapper._();
 
   static const _map = <String, IconData>{
-    'wallet': Icons.account_wallet_outlined,
+    'wallet': Icons.account_balance_wallet_outlined,
     'account_balance': Icons.account_balance,
     'phone_android': Icons.phone_android,
     'credit_card': Icons.credit_card,

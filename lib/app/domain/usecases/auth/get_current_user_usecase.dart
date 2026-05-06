@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
-import '../../core/errors/failures.dart';
-import '../../domain/entities/user_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../usecases/usecase.dart';
+import '../../../core/errors/failures.dart';
+import '../../entities/user_entity.dart';
+import '../../repositories/auth_repository.dart';
+import '../usecase.dart';
 
 class GetCurrentUserUseCase extends UseCase<UserEntity?, NoParams> {
   final AuthRepository repository;

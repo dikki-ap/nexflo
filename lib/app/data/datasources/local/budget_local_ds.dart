@@ -92,7 +92,7 @@ class BudgetLocalDataSource {
         filtered =
             filtered.where((t) => t.walletId == budget.walletId).toList();
       }
-      return filtered.fold(0.0, (s, t) => s + t.amount);
+      return filtered.fold<double>(0.0, (s, t) => s + t.amount);
     } catch (e) {
       throw LocalDatabaseException('Failed to get spent amount: $e');
     }
@@ -120,7 +120,7 @@ class BudgetLocalDataSource {
         filtered =
             filtered.where((t) => t.walletId == budget.walletId).toList();
       }
-      return filtered.fold(0.0, (s, t) => s + t.amount);
+      return filtered.fold<double>(0.0, (s, t) => s + t.amount);
     } catch (e) {
       throw LocalDatabaseException('Failed to get previous period spent: $e');
     }

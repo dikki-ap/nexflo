@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../errors/failures.dart';
+import '../../../core/errors/failures.dart';
 import '../../repositories/wallet_repository.dart';
 import '../../entities/wallet_entity.dart';
 import '../usecase.dart';

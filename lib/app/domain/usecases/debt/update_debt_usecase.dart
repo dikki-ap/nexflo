@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../errors/failures.dart';
+import '../../../core/errors/failures.dart';
 import '../../repositories/debt_repository.dart';
 import '../../entities/debt_entity.dart';
 import '../usecase.dart';

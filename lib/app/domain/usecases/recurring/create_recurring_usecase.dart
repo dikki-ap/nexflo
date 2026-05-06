@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../errors/failures.dart';
+import '../../../core/errors/failures.dart';
 import '../../entities/recurring_transaction_entity.dart';
 import '../../repositories/recurring_transaction_repository.dart';
 import '../usecase.dart';

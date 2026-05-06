@@ -72,7 +72,7 @@ class SheetsRemoteDataSource {
   };
 
   Future<SheetsApi> _getApi() async {
-    final account = GoogleSignIn.instance.currentUser;
+    final account = await GoogleSignIn.instance.currentUser.first;
     if (account == null) throw const AuthException('Not signed in');
     final headers = await account.authHeaders;
     final client = _AuthenticatedClient(http.Client(), headers);

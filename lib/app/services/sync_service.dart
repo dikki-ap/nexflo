@@ -1,5 +1,5 @@
-import 'package:drift/drift.dart' show Value;
-import 'package:get/get.dart';
+import 'package:drift/drift.dart';
+import 'package:get/get.dart' hide Value;
 
 import '../data/database/app_database.dart';
 import '../data/datasources/local/settings_local_ds.dart';
@@ -139,8 +139,7 @@ class SyncService extends GetxService {
       syncStatus: const Value('synced'),
       version: Value(int.tryParse(r.length > 15 ? r[15] : '') ?? 1),
     );
-    await _db.into(_db.wallets)
-        .insert(companion, mode: InsertMode.insertOrReplace);
+    await _db.into(_db.wallets).insertOnConflictUpdate(companion);
   }
 
   Future<void> _pullCategoryRow(List<String> r, String userId) async {
@@ -154,7 +153,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.categories).insert(
+    await _db.into(_db.categories).insertOnConflictUpdate(
           CategoriesCompanion(
             id: Value(r[0]),
             userId: Value(r[1]),
@@ -171,7 +170,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 12 ? r[12] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 
@@ -186,7 +184,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.subcategories).insert(
+    await _db.into(_db.subcategories).insertOnConflictUpdate(
           SubcategoriesCompanion(
             id: Value(r[0]),
             categoryId: Value(r[1]),
@@ -203,7 +201,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 12 ? r[12] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 
@@ -218,7 +215,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.transactions).insert(
+    await _db.into(_db.transactions).insertOnConflictUpdate(
           TransactionsCompanion(
             id: Value(r[0]),
             userId: Value(r[1]),
@@ -242,7 +239,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 19 ? r[19] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 
@@ -257,7 +253,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.budgets).insert(
+    await _db.into(_db.budgets).insertOnConflictUpdate(
           BudgetsCompanion(
             id: Value(r[0]),
             userId: Value(r[1]),
@@ -275,7 +271,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 13 ? r[13] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 
@@ -290,7 +285,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.goals).insert(
+    await _db.into(_db.goals).insertOnConflictUpdate(
           GoalsCompanion(
             id: Value(r[0]),
             userId: Value(r[1]),
@@ -309,7 +304,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 14 ? r[14] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 
@@ -324,7 +318,7 @@ class SyncService extends GetxService {
     if (local != null && local.syncStatus == 'pending') return;
     if (local != null && !remoteUpdated.isAfter(local.updatedAt)) return;
 
-    await _db.into(_db.debts).insert(
+    await _db.into(_db.debts).insertOnConflictUpdate(
           DebtsCompanion(
             id: Value(r[0]),
             userId: Value(r[1]),
@@ -342,7 +336,6 @@ class SyncService extends GetxService {
             syncStatus: const Value('synced'),
             version: Value(int.tryParse(r.length > 13 ? r[13] : '') ?? 1),
           ),
-          mode: InsertMode.insertOrReplace,
         );
   }
 

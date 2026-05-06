@@ -24,7 +24,7 @@ class BiometricService extends GetxService {
     try {
       return await _localAuth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
+        options: AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: false,
         ),

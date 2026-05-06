@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../errors/failures.dart';
+import '../../core/errors/failures.dart';
 import '../entities/recurring_transaction_entity.dart';
 
 abstract class RecurringTransactionRepository {
