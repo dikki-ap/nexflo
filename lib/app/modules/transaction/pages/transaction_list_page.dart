@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/transaction_controller.dart';
 import '../widgets/transaction_tile.dart';
 import '../widgets/transaction_filter_bar.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/extensions/context_extensions.dart';
+import '../../../core/widgets/animated_amount.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/shimmer_loading.dart';
 
 class TransactionListPage extends GetView<TransactionController> {
   const TransactionListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final hPad = context.horizontalPadding;
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
       appBar: AppBar(
         title: const Text('Transactions'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search_rounded),
             onPressed: () => _showSearch(context),
           ),
         ],
@@ -24,43 +33,28 @@ class TransactionListPage extends GetView<TransactionController> {
       body: Column(
         children: [
           const TransactionFilterBar(),
-          _SummaryRow(),
-          const Divider(height: 1),
+          _SummaryRow(hPad: hPad, isDark: isDark),
+          const SizedBox(height: 4),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (controller.transactions.isEmpty) {
-                return Center(
+                return ShimmerLoading(
+                  isLoading: true,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.receipt_long_outlined,
-                          size: 64,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.3)),
-                      const SizedBox(height: 16),
-                      const Text('No transactions',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 8),
-                      Text('Tap + to record a transaction',
-                          style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.5))),
-                    ],
+                    children: List.generate(
+                      8,
+                      (_) => ShimmerListTile(horizontalPadding: hPad),
+                    ),
                   ),
                 );
+              }
+              if (controller.transactions.isEmpty) {
+                return _EmptyState();
               }
               final grouped = controller.grouped;
               final keys = grouped.keys.toList();
               return ListView.builder(
+                padding: EdgeInsets.only(bottom: 100, top: 4),
                 itemCount: keys.length,
                 itemBuilder: (_, i) {
                   final key = keys[i];
@@ -68,7 +62,7 @@ class TransactionListPage extends GetView<TransactionController> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _DateHeader(key, txs),
+                      _DateHeader(date: key, isDark: isDark, hPad: hPad),
                       ...txs.map((tx) => TransactionTile(
                             tx: tx,
                             category: controller.categoryById(tx.categoryId),
@@ -89,12 +83,28 @@ class TransactionListPage extends GetView<TransactionController> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
           controller.prepareForm();
           Get.toNamed(AppRoutes.transactionAdd);
         },
-        child: const Icon(Icons.add),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: AppColors.tealGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.tealGlow,
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
       ),
     );
   }
@@ -108,26 +118,75 @@ class TransactionListPage extends GetView<TransactionController> {
 }
 
 class _SummaryRow extends GetView<TransactionController> {
+  final double hPad;
+  final bool isDark;
+  const _SummaryRow({required this.hPad, required this.isDark});
+
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    return Obx(() => Padding(
+          padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 0),
           child: Row(
             children: [
               Expanded(
-                child: _SummaryChip(
-                  label: 'Income',
-                  amount: controller.totalIncome.value,
-                  color: AppColors.income,
+                child: GlassCard(
+                  borderRadius: 14,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  color: AppColors.income.withValues(alpha: 0.08),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Income',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.income.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedAmount(
+                        amount: controller.totalIncome.value,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.income,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: _SummaryChip(
-                  label: 'Expense',
-                  amount: controller.totalExpense.value,
-                  color: AppColors.expense,
+                child: GlassCard(
+                  borderRadius: 14,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  color: AppColors.expense.withValues(alpha: 0.08),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Expense',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.expense.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedAmount(
+                        amount: controller.totalExpense.value,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -136,63 +195,72 @@ class _SummaryRow extends GetView<TransactionController> {
   }
 }
 
-class _SummaryChip extends StatelessWidget {
-  final String label;
-  final double amount;
-  final Color color;
-  const _SummaryChip(
-      {required this.label, required this.amount, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 12, color: color.withValues(alpha: 0.8))),
-          Text(
-            _fmt(amount),
-            style: TextStyle(
-                fontWeight: FontWeight.bold, color: color, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
-  }
-}
-
 class _DateHeader extends StatelessWidget {
   final String date;
-  final List txs;
-  const _DateHeader(this.date, this.txs);
+  final bool isDark;
+  final double hPad;
+  const _DateHeader({required this.date, required this.isDark, required this.hPad});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 6),
       child: Text(
-        date,
+        date.toUpperCase(),
         style: TextStyle(
+          fontSize: 11,
           fontWeight: FontWeight.w600,
-          fontSize: 13,
-          color: Theme.of(context)
-              .colorScheme
-              .onSurface
-              .withValues(alpha: 0.55),
+          letterSpacing: 0.8,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.4)
+              : AppColors.grey400,
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.tealGlowSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.receipt_long_outlined,
+              size: 36,
+              color: AppColors.tealMid,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No transactions',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : AppColors.grey900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap + to record a transaction',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : AppColors.grey400,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -204,26 +272,31 @@ class _TxSearchDelegate extends SearchDelegate {
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+        IconButton(
+          icon: const Icon(Icons.clear_rounded),
+          onPressed: () => query = '',
+        ),
       ];
 
   @override
-  Widget buildLeading(BuildContext context) =>
-      IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
+  Widget buildLeading(BuildContext context) => IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () => close(context, null),
+      );
 
   @override
   Widget buildResults(BuildContext context) {
     ctrl.setSearch(query);
-    return _buildList(context);
+    return _buildList();
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.isNotEmpty) ctrl.setSearch(query);
-    return _buildList(context);
+    return _buildList();
   }
 
-  Widget _buildList(BuildContext context) {
+  Widget _buildList() {
     return Obx(() => ListView(
           children: ctrl.transactions
               .map((tx) => TransactionTile(

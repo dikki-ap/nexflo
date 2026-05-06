@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/wallet_controller.dart';
 import '../widgets/wallet_card.dart';
 import '../widgets/adjust_balance_sheet.dart';
 import '../../../config/routes/app_routes.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/extensions/context_extensions.dart';
+import '../../../core/widgets/animated_amount.dart';
+import '../../../core/widgets/shimmer_loading.dart';
 
 class WalletListPage extends GetView<WalletController> {
   const WalletListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
       appBar: AppBar(
         title: const Text('Wallets'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_rounded),
             onPressed: () {
               controller.prepareForm();
               Get.toNamed(AppRoutes.walletAdd);
@@ -25,38 +33,33 @@ class WalletListPage extends GetView<WalletController> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (controller.wallets.isEmpty) {
-          return Center(
+          return ShimmerLoading(
+            isLoading: true,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.account_balance_wallet_outlined,
-                    size: 64,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.3)),
-                const SizedBox(height: 16),
-                const Text('No wallets yet',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ShimmerCard(height: 72, horizontalMargin: context.horizontalPadding),
                 const SizedBox(height: 8),
-                Text('Tap + to add your first wallet',
-                    style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5))),
+                ...List.generate(
+                  5,
+                  (_) => ShimmerCard(
+                    height: 80,
+                    horizontalMargin: context.horizontalPadding,
+                    borderRadius: 16,
+                  ),
+                ),
               ],
             ),
           );
         }
+        if (controller.wallets.isEmpty) {
+          return _EmptyState();
+        }
         return Column(
           children: [
-            _NetWorthBanner(controller),
+            _NetWorthBanner(controller, isDark: isDark),
             Expanded(
               child: ReorderableListView.builder(
+                padding: const EdgeInsets.only(bottom: 100),
                 itemCount: controller.wallets.length,
                 onReorder: controller.reorder,
                 itemBuilder: (_, i) {
@@ -83,13 +86,42 @@ class WalletListPage extends GetView<WalletController> {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
           controller.prepareForm();
           Get.toNamed(AppRoutes.walletAdd);
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Wallet'),
+        child: Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: AppColors.tealGradient,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.tealGlow,
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.add_rounded, color: Colors.white, size: 22),
+              SizedBox(width: 6),
+              Text(
+                'Add Wallet',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -104,7 +136,7 @@ class WalletListPage extends GetView<WalletController> {
           TextButton(
               onPressed: () => Get.back(), child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
             onPressed: () {
               Get.back();
               controller.deleteWallet(id);
@@ -119,43 +151,94 @@ class WalletListPage extends GetView<WalletController> {
 
 class _NetWorthBanner extends StatelessWidget {
   final WalletController ctrl;
-  const _NetWorthBanner(this.ctrl);
+  final bool isDark;
+  const _NetWorthBanner(this.ctrl, {required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final nw = ctrl.totalNetWorth;
-      return Container(
-        margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Net Worth',
-                style: TextStyle(
-                    color:
-                        Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontSize: 14)),
-            Text(
-              _fmt(nw),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+    final hPad = context.horizontalPadding;
+    return Obx(() => Container(
+          margin: EdgeInsets.fromLTRB(hPad, 12, hPad, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: AppColors.tealGradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.tealGlow,
+                blurRadius: 20,
+                offset: const Offset(0, 6),
               ),
-            ),
-          ],
-        ),
-      );
-    });
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Net Worth',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              AnimatedAmount(
+                amount: ctrl.totalNetWorth,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+        ));
   }
+}
 
-  String _fmt(double v) {
-    if (v.abs() >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    return v.toStringAsFixed(0);
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: const BoxDecoration(
+              color: AppColors.tealGlowSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 36,
+              color: AppColors.tealMid,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No wallets yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : AppColors.grey900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap + to add your first wallet',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : AppColors.grey400,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
