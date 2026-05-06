@@ -1,14 +1,13 @@
 import 'dart:convert';
 
 import 'package:googleapis/sheets/v4.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/constants/sheets_constants.dart';
 import '../../../core/errors/exceptions.dart';
+import 'google_auth_remote_ds.dart';
 
 class SheetsRemoteDataSource {
-  final GoogleSignIn _signIn = GoogleSignIn();
   static const _sheetHeaders = <String, List<String>>{
     SheetsConstants.sheetMeta: [
       'app_version',
@@ -73,7 +72,7 @@ class SheetsRemoteDataSource {
   };
 
   Future<SheetsApi> _getApi() async {
-    final account = _signIn.currentUser;
+    final account = GoogleAuthRemoteDataSource.currentUser;
     if (account == null) throw const AuthException('Not signed in');
     final headers = await account.authHeaders;
     final client = _AuthenticatedClient(http.Client(), headers);

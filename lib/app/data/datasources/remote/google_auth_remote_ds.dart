@@ -5,17 +5,7 @@ import '../../../core/errors/exceptions.dart';
 
 class GoogleAuthRemoteDataSource {
   static bool _initialized = false;
-
-  final _signIn = GoogleSignIn(
-    scopes: [
-      'email',
-      'profile',
-      SheetsConstants.scopeSpreadsheets,
-      SheetsConstants.scopeDriveFile,
-    ],
-  );
-
-  GoogleSignIn get googleSignIn => _signIn;
+  static GoogleSignInAccount? _currentAccount;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -26,8 +16,12 @@ class GoogleAuthRemoteDataSource {
   Future<GoogleSignInAccount> signIn() async {
     try {
       await initialize();
-      final account = await _signIn.signIn();
-      if (account == null) throw const AuthException('Sign in cancelled');
+      final account = await GoogleSignIn.instance.authenticate();
+      _currentAccount = account;
+      await GoogleSignIn.instance.requestScopes([
+        SheetsConstants.scopeSpreadsheets,
+        SheetsConstants.scopeDriveFile,
+      ]);
       return account;
     } on AuthException {
       rethrow;
@@ -38,7 +32,8 @@ class GoogleAuthRemoteDataSource {
 
   Future<void> signOut() async {
     try {
-      await _signIn.signOut();
+      await GoogleSignIn.instance.signOut();
+      _currentAccount = null;
     } catch (e) {
       throw AuthException('Sign out failed: $e');
     }
@@ -47,11 +42,11 @@ class GoogleAuthRemoteDataSource {
   Future<GoogleSignInAccount?> signInSilently() async {
     try {
       await initialize();
-      return await _signIn.signInSilently();
+      return _currentAccount;
     } catch (_) {
       return null;
     }
   }
 
-  GoogleSignInAccount? get currentUser => _signIn.currentUser;
+  static GoogleSignInAccount? get currentUser => _currentAccount;
 }
