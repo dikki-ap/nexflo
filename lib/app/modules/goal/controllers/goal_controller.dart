@@ -33,7 +33,7 @@ class GoalController extends GetxController {
   late final DeleteGoalUseCase _delete;
   late final AllocateToGoalUseCase _allocate;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   List<GoalEntity> get activeGoals =>
       goals.where((g) => g.status == GoalStatus.active).toList();

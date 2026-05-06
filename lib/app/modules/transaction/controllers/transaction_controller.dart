@@ -57,7 +57,7 @@ class TransactionController extends GetxController {
   late final GetAllWalletsUseCase _getWallets;
   late final GetCategoriesUseCase _getCategories;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   @override
   void onInit() {

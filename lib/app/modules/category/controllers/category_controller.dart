@@ -37,7 +37,7 @@ class CategoryController extends GetxController {
   late final CreateSubcategoryUseCase _createSubcategory;
   late final DeleteSubcategoryUseCase _deleteSubcategory;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   @override
   void onInit() {

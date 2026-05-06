@@ -36,7 +36,7 @@ class StatisticsController extends GetxController {
   late final TransactionLocalDataSource _txDs;
   late final GetCategoriesUseCase _getCategories;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   double get cashflow => totalIncome.value - totalExpense.value;
   double get savingsRate =>

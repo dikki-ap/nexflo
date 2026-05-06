@@ -36,7 +36,7 @@ class DebtController extends GetxController {
   late final AddDebtPaymentUseCase _addPayment;
   late final GetDebtPaymentsUseCase _getPayments;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   List<DebtEntity> get iOweList =>
       debts.where((d) => d.type == DebtType.iOwe && d.deletedAt == null).toList();

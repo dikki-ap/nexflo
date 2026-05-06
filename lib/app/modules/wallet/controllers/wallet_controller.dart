@@ -40,7 +40,7 @@ class WalletController extends GetxController {
   late final AdjustWalletBalanceUseCase _adjustBalance;
   late final CreateTransactionUseCase _createTx;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   @override
   void onInit() {

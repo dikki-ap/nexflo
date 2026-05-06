@@ -45,13 +45,20 @@ void main() async {
 
 Future<void> _initServices() async {
   final db = Get.put(AppDatabase());
-  await Get.putAsync(() async => ConnectivityService().init());
-  await Get.putAsync(() async => AuthService().init());
-  await Get.putAsync(() async => CurrencyService(db).init());
-  await Get.putAsync(() async => SyncService(db).init());
-  await Get.putAsync(() async => RecurringService(db).init());
-  await Get.putAsync(() async => NotificationService().init());
-  await Get.putAsync(() async => BiometricService().init());
+
+  await Future.wait([
+    Get.putAsync(() async => ConnectivityService().init()),
+    Get.putAsync(() async => AuthService().init()),
+    Get.putAsync(() async => NotificationService().init()),
+    Get.putAsync(() async => BiometricService().init()),
+  ]);
+
+  await Future.wait([
+    Get.putAsync(() async => CurrencyService(db).init()),
+    Get.putAsync(() async => SyncService(db).init()),
+    Get.putAsync(() async => RecurringService(db).init()),
+  ]);
+
   Get.put(OcrService());
   Get.put(AppThemeController());
 }

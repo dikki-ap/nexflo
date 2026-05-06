@@ -46,7 +46,7 @@ class RecurringController extends GetxController {
   late final GetCategoriesUseCase _getCategories;
   late final RecurringLocalDataSource _recurringDs;
 
-  String get _userId => Get.find<AuthService>().currentUser!.id;
+  String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
   List<RecurringTransactionEntity> get activeList =>
       recurringList.where((r) => r.isActive).toList();
