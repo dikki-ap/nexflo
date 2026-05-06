@@ -129,13 +129,15 @@ class WalletController extends GetxController {
         (_) {},
       );
     } else {
-      // Build updated entity
       final updated = WalletEntityHelper.copyWith(
         existing,
         name: name,
         colorHex: _hexFromColor(selectedColor.value),
         iconName: selectedIcon.value,
         isExcludeTotal: isExcludeTotal.value,
+        balance: double.tryParse(balanceCtrl.text) ?? existing.balance,
+        currencyCode: selectedCurrency.value,
+        type: selectedType.value,
       );
       final result = await _update(updated);
       result.fold(
@@ -219,16 +221,18 @@ class WalletEntityHelper {
     bool? isExcludeTotal,
     bool? isArchived,
     double? balance,
+    String? currencyCode,
+    WalletType? type,
   }) {
     return _WalletCopy(
       id: w.id,
       userId: w.userId,
       name: name ?? w.name,
-      type: w.type,
+      type: type ?? w.type,
       colorHex: colorHex ?? w.colorHex,
       iconName: iconName ?? w.iconName,
       balance: balance ?? w.balance,
-      currencyCode: w.currencyCode,
+      currencyCode: currencyCode ?? w.currencyCode,
       creditLimit: w.creditLimit,
       isExcludeTotal: isExcludeTotal ?? w.isExcludeTotal,
       sortOrder: w.sortOrder,

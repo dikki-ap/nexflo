@@ -154,6 +154,9 @@ class TransactionController extends GetxController {
   }
 
   void prepareForm([TransactionEntity? existing]) {
+    // Always refresh so newly added wallets/categories appear in the form.
+    _loadWallets();
+    _loadCategories();
     if (existing != null) {
       amountCtrl.text = existing.amount.toStringAsFixed(0);
       noteCtrl.text = existing.note ?? '';
@@ -171,7 +174,8 @@ class TransactionController extends GetxController {
       selectedCategoryId.value = null;
       selectedToWalletId.value = null;
       receiptImagePath.value = null;
-      if (wallets.isNotEmpty) selectedWalletId.value = wallets.first.id;
+      // selectedWalletId is set reactively inside _loadWallets() when list arrives.
+      selectedWalletId.value = null;
     }
   }
 

@@ -288,9 +288,22 @@ class _CurrencyPage extends StatelessWidget {
                   items: ctrl.currencyCodes
                       .map((code) => DropdownMenuItem(
                             value: code,
-                            child: Text(code,
-                                style: TextStyle(
-                                    color: isDark ? Colors.white : AppColors.grey900)),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _currencyFlag(code),
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '$code  –  ${_currencyName(code)}',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.grey900),
+                                ),
+                              ],
+                            ),
                           ))
                       .toList(),
                   onChanged: (v) => ctrl.selectedCurrencyCode.value = v!,
@@ -300,6 +313,27 @@ class _CurrencyPage extends StatelessWidget {
       ),
     );
   }
+
+  static String _currencyFlag(String code) => const {
+        'IDR': '🇮🇩', 'USD': '🇺🇸', 'EUR': '🇪🇺', 'GBP': '🇬🇧',
+        'JPY': '🇯🇵', 'SGD': '🇸🇬', 'MYR': '🇲🇾', 'AUD': '🇦🇺',
+        'CAD': '🇨🇦', 'CHF': '🇨🇭', 'CNY': '🇨🇳', 'HKD': '🇭🇰',
+        'KRW': '🇰🇷', 'INR': '🇮🇳', 'THB': '🇹🇭', 'PHP': '🇵🇭',
+        'VND': '🇻🇳', 'TWD': '🇹🇼', 'NZD': '🇳🇿', 'AED': '🇦🇪',
+      }[code] ?? '🌐';
+
+  static String _currencyName(String code) => const {
+        'IDR': 'Indonesian Rupiah', 'USD': 'US Dollar',
+        'EUR': 'Euro', 'GBP': 'British Pound',
+        'JPY': 'Japanese Yen', 'SGD': 'Singapore Dollar',
+        'MYR': 'Malaysian Ringgit', 'AUD': 'Australian Dollar',
+        'CAD': 'Canadian Dollar', 'CHF': 'Swiss Franc',
+        'CNY': 'Chinese Yuan', 'HKD': 'Hong Kong Dollar',
+        'KRW': 'South Korean Won', 'INR': 'Indian Rupee',
+        'THB': 'Thai Baht', 'PHP': 'Philippine Peso',
+        'VND': 'Vietnamese Dong', 'TWD': 'New Taiwan Dollar',
+        'NZD': 'New Zealand Dollar', 'AED': 'UAE Dirham',
+      }[code] ?? code;
 }
 
 class _CutoffDatePage extends StatelessWidget {

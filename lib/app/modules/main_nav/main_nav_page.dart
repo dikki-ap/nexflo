@@ -20,6 +20,12 @@ class MainNavPage extends GetView<MainNavController> {
     SettingsPage(),
   ];
 
+  // 4 visible nav items — center FAB slot handled by ModernBottomNav (onFabTap).
+  // With 4 items, items.length ~/ 2 = 2, so index 2 becomes the FAB slot.
+  // Pages: 0=Dashboard, 1=Transactions, 2=Statistics, 3=Settings
+  // Nav slots: 0=Home, 1=Transactions, [2=FAB], 3=Statistics (items[2]), 4=Settings (items[3])
+  // We pass only 4 items; FAB replaces slot 2 visually.
+  // To keep Statistics/Settings selectable, we remap page indices ↔ nav active indices.
   static const _navItems = [
     NavItem(
       icon: Icons.home_outlined,
@@ -43,46 +49,39 @@ class MainNavPage extends GetView<MainNavController> {
     ),
   ];
 
+  /// Map page index (0–3) → nav highlight index (0–4, skipping slot 2 = FAB).
+  static int _pageToNav(int page) => page < 2 ? page : page + 1;
+
+  /// Map nav tap index → page index. Returns -1 for the FAB slot (index 2).
+  static int _navToPage(int nav) {
+    if (nav == 2) return -1; // FAB slot
+    return nav < 2 ? nav : nav - 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
-      extendBody: true,
       body: Obx(() => IndexedStack(
             index: controller.currentIndex.value,
             children: _pages,
           )),
-      bottomNavigationBar: Obx(
-        () => ModernBottomNav(
-          items: _navItems,
-          currentIndex: controller.currentIndex.value,
-          onTap: controller.changePage,
-        ),
-      ),
-      floatingActionButton: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          Get.toNamed(AppRoutes.transactionAdd);
-        },
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: AppColors.tealGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.tealGlow,
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: Obx(() => ModernBottomNav(
+            items: _navItems,
+            currentIndex: _pageToNav(controller.currentIndex.value),
+            onTap: (navIdx) {
+              final page = _navToPage(navIdx);
+              if (page >= 0) {
+                HapticFeedback.selectionClick();
+                controller.changePage(page);
+              }
+            },
+            onFabTap: () {
+              HapticFeedback.mediumImpact();
+              Get.toNamed(AppRoutes.transactionAdd);
+            },
+          )),
     );
   }
 }
