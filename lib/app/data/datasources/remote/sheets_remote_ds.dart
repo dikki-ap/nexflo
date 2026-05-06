@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart';
 
 import '../../../core/constants/sheets_constants.dart';
 import '../../../core/errors/exceptions.dart';
+import 'google_auth_remote_ds.dart';
 
 class SheetsRemoteDataSource {
   static const _sheetHeaders = <String, List<String>>{
@@ -72,9 +72,15 @@ class SheetsRemoteDataSource {
   };
 
   Future<SheetsApi> _getApi() async {
-    final client = await GoogleSignIn.instance.authenticatedClient();
-    if (client == null) throw const AuthException('Not signed in');
-    return SheetsApi(client);
+    final account = GoogleAuthRemoteDataSource.currentUser;
+    if (account == null) throw const AuthException('Not signed in');
+    var authorization = await account.authorizationClient
+        .authorizationForScopes(GoogleAuthRemoteDataSource.scopes);
+    authorization ??= await account.authorizationClient
+        .authorizeScopes(GoogleAuthRemoteDataSource.scopes);
+    return SheetsApi(
+      authorization.authClient(scopes: GoogleAuthRemoteDataSource.scopes),
+    );
   }
 
   Future<String> createSpreadsheet({

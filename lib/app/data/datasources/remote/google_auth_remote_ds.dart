@@ -7,22 +7,34 @@ class GoogleAuthRemoteDataSource {
   static bool _initialized = false;
   static GoogleSignInAccount? _currentAccount;
 
+  static const List<String> scopes = <String>[
+    SheetsConstants.scopeSpreadsheets,
+    SheetsConstants.scopeDriveFile,
+  ];
+
   Future<void> initialize() async {
     if (_initialized) return;
-    await GoogleSignIn.instance.initialize(
-      scopes: [
-        SheetsConstants.scopeSpreadsheets,
-        SheetsConstants.scopeDriveFile,
-      ],
-    );
+    await GoogleSignIn.instance.initialize();
+    GoogleSignIn.instance.authenticationEvents.listen((event) {
+      switch (event) {
+        case GoogleSignInAuthenticationEventSignIn():
+          _currentAccount = event.user;
+        case GoogleSignInAuthenticationEventSignOut():
+          _currentAccount = null;
+      }
+    });
     _initialized = true;
   }
 
   Future<GoogleSignInAccount> signIn() async {
     try {
       await initialize();
-      final account = await GoogleSignIn.instance.authenticate();
-      _currentAccount = account;
+      await GoogleSignIn.instance.authenticate();
+      // Allow stream event to propagate before reading _currentAccount
+      await Future<void>.delayed(Duration.zero);
+      final account = _currentAccount;
+      if (account == null) throw const AuthException('Sign in failed');
+      await account.authorizationClient.authorizeScopes(scopes);
       return account;
     } on AuthException {
       rethrow;
@@ -34,7 +46,6 @@ class GoogleAuthRemoteDataSource {
   Future<void> signOut() async {
     try {
       await GoogleSignIn.instance.signOut();
-      _currentAccount = null;
     } catch (e) {
       throw AuthException('Sign out failed: $e');
     }
@@ -43,6 +54,11 @@ class GoogleAuthRemoteDataSource {
   Future<GoogleSignInAccount?> signInSilently() async {
     try {
       await initialize();
+      final result = GoogleSignIn.instance.attemptLightweightAuthentication();
+      if (result != null) {
+        await result;
+        await Future<void>.delayed(Duration.zero);
+      }
       return _currentAccount;
     } catch (_) {
       return null;
