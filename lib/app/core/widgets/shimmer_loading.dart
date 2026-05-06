@@ -1,39 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import '../constants/app_animations.dart';
+import '../constants/app_colors.dart';
 
 class ShimmerLoading extends StatelessWidget {
-  final Widget child;
-  final bool isLoading;
-
   const ShimmerLoading({
     super.key,
     required this.isLoading,
     required this.child,
   });
 
+  final Widget child;
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
     if (!isLoading) return child;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      highlightColor:
-          Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+      baseColor: isDark
+          ? AppAnimations.shimmerBase
+          : AppAnimations.shimmerBaseLight,
+      highlightColor: isDark
+          ? AppAnimations.shimmerHighlight
+          : AppAnimations.shimmerHighlightLight,
       child: child,
     );
   }
 }
 
+/// Generic shimmer block — fill it with white, Shimmer wraps the color.
 class ShimmerTile extends StatelessWidget {
-  final double height;
-  final double? width;
-  final double borderRadius;
-
   const ShimmerTile({
     super.key,
     this.height = 16,
     this.width,
     this.borderRadius = 8,
   });
+
+  final double height;
+  final double? width;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +55,16 @@ class ShimmerTile extends StatelessWidget {
   }
 }
 
+/// Shimmer placeholder for a standard transaction tile.
 class ShimmerListTile extends StatelessWidget {
-  const ShimmerListTile({super.key});
+  const ShimmerListTile({super.key, this.horizontalPadding = 20});
+
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 10),
       child: Row(
         children: [
           Container(
@@ -62,7 +72,7 @@ class ShimmerListTile extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
           const SizedBox(width: 12),
@@ -80,8 +90,8 @@ class ShimmerListTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  height: 12,
-                  width: 120,
+                  height: 11,
+                  width: 100,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -93,7 +103,7 @@ class ShimmerListTile extends StatelessWidget {
           const SizedBox(width: 12),
           Container(
             height: 14,
-            width: 60,
+            width: 56,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(6),
@@ -105,19 +115,76 @@ class ShimmerListTile extends StatelessWidget {
   }
 }
 
+/// Shimmer card placeholder — height and margin are responsive.
 class ShimmerCard extends StatelessWidget {
-  final double height;
+  const ShimmerCard({
+    super.key,
+    this.height = 100,
+    this.horizontalMargin = 20,
+    this.borderRadius = 20,
+  });
 
-  const ShimmerCard({super.key, this.height = 100});
+  final double height;
+  final double horizontalMargin;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+    );
+  }
+}
+
+/// A row of shimmer wallet card placeholders.
+class ShimmerWalletRow extends StatelessWidget {
+  const ShimmerWalletRow({super.key, this.cardWidth = 160, this.height = 100});
+
+  final double cardWidth;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: 3,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, __) => Container(
+          width: cardWidth,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-page shimmer for list screens.
+class ShimmerList extends StatelessWidget {
+  const ShimmerList({super.key, this.count = 6});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ShimmerLoading(
+      isLoading: true,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: count,
+        separatorBuilder: (_, __) => const SizedBox(height: 4),
+        itemBuilder: (_, __) => const ShimmerListTile(),
       ),
     );
   }
