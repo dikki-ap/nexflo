@@ -128,8 +128,13 @@ class SettingsController extends GetxController {
   }
 
   Future<void> triggerSync() async {
-    await _sync.sync();
-    await loadSettings(); // Refresh lastSyncAt
+    try {
+      await _sync.sync();
+      await loadSettings();
+    } catch (e) {
+      Get.snackbar('Sync Failed', e.toString(),
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   Future<void> disconnectSheets() async {

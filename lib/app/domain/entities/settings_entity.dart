@@ -78,5 +78,22 @@ class SettingsEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, userId, baseCurrencyCode, cutoffDate];
+  List<Object?> get props => [
+        id,
+        userId,
+        baseCurrencyCode,
+        cutoffDate,
+        themeMode,
+        themeColor,
+        themeCustomHex,
+        isBiometricEnabled,
+        isPinEnabled,
+        pinHash,
+        sheetsSpreadsheetId,
+        lastSyncAt,
+        syncEnabled,
+        notificationBudgetAlert,
+        notificationRecurringReminder,
+        notificationDebtReminder,
+      ];
 }
