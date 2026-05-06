@@ -16,7 +16,7 @@ class AuthService extends GetxService {
 
   Future<AuthService> init() async {
     final remoteDs = GoogleAuthRemoteDataSource();
-    final db = Get.find();
+    final db = Get.find<AppDatabase>();
     final localDs = UserLocalDataSource(db);
     final repo = AuthRepositoryImpl(remoteDs, localDs);
     _getCurrentUser = GetCurrentUserUseCase(repo);
