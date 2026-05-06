@@ -21,13 +21,18 @@ import '../../../services/auth_service.dart';
 class CategoryController extends GetxController {
   final categories = <CategoryEntity>[].obs;
   final subcategories = <SubcategoryEntity>[].obs;
+  final subsByCategory = RxMap<String, List<SubcategoryEntity>>();
   final isLoading = false.obs;
 
-  // Form
+  // Category form
   final nameCtrl = TextEditingController();
   final selectedType = CategoryType.expense.obs;
   final selectedColor = AppColors.teal.obs;
   final selectedIcon = 'more_horiz'.obs;
+
+  // Subcategory form
+  final subNameCtrl = TextEditingController();
+  final selectedSubIcon = 'more_horiz'.obs;
 
   late final GetCategoriesUseCase _getCategories;
   late final CreateCategoryUseCase _createCategory;
@@ -62,6 +67,7 @@ class CategoryController extends GetxController {
   @override
   void onClose() {
     nameCtrl.dispose();
+    subNameCtrl.dispose();
     super.onClose();
   }
 
@@ -73,13 +79,26 @@ class CategoryController extends GetxController {
       (list) => categories.value = list,
     );
     isLoading.value = false;
+    await _loadAllSubcategories();
+  }
+
+  Future<void> _loadAllSubcategories() async {
+    for (final cat in categories) {
+      final r = await _getSubcategories(GetSubcategoriesParams(cat.id));
+      r.fold((_) {}, (list) {
+        subsByCategory[cat.id] = list as List<SubcategoryEntity>;
+      });
+    }
   }
 
   Future<void> loadSubcategories(String categoryId) async {
     final result = await _getSubcategories(GetSubcategoriesParams(categoryId));
     result.fold(
       (f) => Get.snackbar('Error', f.message),
-      (list) => subcategories.value = list,
+      (list) {
+        subcategories.value = list as List<SubcategoryEntity>;
+        subsByCategory[categoryId] = list;
+      },
     );
   }
 
@@ -95,6 +114,11 @@ class CategoryController extends GetxController {
       selectedColor.value = AppColors.teal;
       selectedIcon.value = 'more_horiz';
     }
+  }
+
+  void prepareSubForm() {
+    subNameCtrl.clear();
+    selectedSubIcon.value = 'more_horiz';
   }
 
   Future<void> saveCategory([CategoryEntity? existing]) async {
@@ -147,14 +171,16 @@ class CategoryController extends GetxController {
     );
   }
 
-  Future<void> addSubcategory(String categoryId, String name) async {
+  Future<void> addSubcategory(
+      String categoryId, String name, String iconName) async {
     if (name.trim().isEmpty) return;
+    final cat = categories.firstWhereOrNull((c) => c.id == categoryId);
     final result = await _createSubcategory(CreateSubcategoryParams(
       userId: _userId,
       categoryId: categoryId,
       name: name.trim(),
-      iconName: 'more_horiz',
-      colorHex: '#9E9E9E',
+      iconName: iconName,
+      colorHex: cat?.colorHex ?? '#9E9E9E',
     ));
     result.fold(
       (f) => Get.snackbar('Error', f.message),
@@ -179,14 +205,18 @@ class CategoryController extends GetxController {
   }
 
   List<CategoryEntity> get expenseCategories =>
-      categories.where((c) =>
-          (c.type == CategoryType.expense || c.type == CategoryType.both) &&
-          !c.isArchived).toList();
+      categories
+          .where((c) =>
+              (c.type == CategoryType.expense || c.type == CategoryType.both) &&
+              !c.isArchived)
+          .toList();
 
   List<CategoryEntity> get incomeCategories =>
-      categories.where((c) =>
-          (c.type == CategoryType.income || c.type == CategoryType.both) &&
-          !c.isArchived).toList();
+      categories
+          .where((c) =>
+              (c.type == CategoryType.income || c.type == CategoryType.both) &&
+              !c.isArchived)
+          .toList();
 }
 
 class _CategoryCopy extends CategoryEntity {

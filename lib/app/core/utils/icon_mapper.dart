@@ -43,6 +43,18 @@ class IconMapper {
     'wifi': Icons.wifi,
     'electric_bolt': Icons.electric_bolt,
     'water_drop': Icons.water_drop,
+    'coffee': Icons.coffee,
+    'directions_bus': Icons.directions_bus,
+    'local_taxi': Icons.local_taxi,
+    'fastfood': Icons.fastfood,
+    'content_cut': Icons.content_cut,
+    'menu_book': Icons.menu_book,
+    'music_note': Icons.music_note,
+    'hotel': Icons.hotel,
+    'local_pharmacy': Icons.local_pharmacy,
+    'car_repair': Icons.car_repair,
+    'cleaning_services': Icons.cleaning_services,
+    'hotel_class': Icons.hotel_class,
   };
 
   static IconData get(String name) =>

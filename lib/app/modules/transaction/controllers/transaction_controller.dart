@@ -6,13 +6,16 @@ import '../../../core/enums/transaction_type.dart';
 import '../../../data/datasources/local/transaction_local_ds.dart';
 import '../../../data/datasources/local/wallet_local_ds.dart';
 import '../../../data/datasources/local/category_local_ds.dart';
+import '../../../data/datasources/local/subcategory_local_ds.dart';
 import '../../../data/repositories/transaction_repository_impl.dart';
 import '../../../data/repositories/wallet_repository_impl.dart';
 import '../../../data/repositories/category_repository_impl.dart';
+import '../../../data/repositories/subcategory_repository_impl.dart';
 import '../../../data/database/app_database.dart';
 import '../../../domain/entities/transaction_entity.dart';
 import '../../../domain/entities/wallet_entity.dart';
 import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/subcategory_entity.dart';
 import '../../../domain/usecases/transaction/get_transactions_usecase.dart';
 import '../../../domain/usecases/transaction/create_transaction_usecase.dart';
 import '../../../domain/usecases/transaction/update_transaction_usecase.dart';
@@ -20,6 +23,7 @@ import '../../../domain/usecases/transaction/delete_transaction_usecase.dart';
 import '../../../domain/usecases/transaction/get_transaction_summary_usecase.dart';
 import '../../../domain/usecases/wallet/get_all_wallets_usecase.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/subcategory/get_subcategories_usecase.dart';
 import '../../../services/auth_service.dart';
 
 class TransactionController extends GetxController {
@@ -44,6 +48,10 @@ class TransactionController extends GetxController {
   final selectedCategoryId = Rxn<String>();
   final selectedDate = DateTime.now().obs;
   final receiptImagePath = Rxn<String>();
+  final selectedSubcategoryId = Rxn<String>();
+
+  // Subcategories for the currently selected category
+  final subcategories = <SubcategoryEntity>[].obs;
 
   // Summary
   final totalIncome = 0.0.obs;
@@ -56,6 +64,7 @@ class TransactionController extends GetxController {
   late final GetTransactionSummaryUseCase _getSummary;
   late final GetAllWalletsUseCase _getWallets;
   late final GetCategoriesUseCase _getCategories;
+  late final GetSubcategoriesUseCase _getSubcategories;
 
   String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
@@ -70,6 +79,8 @@ class TransactionController extends GetxController {
     final walletRepo = WalletRepositoryImpl(walletDs);
     final catDs = CategoryLocalDataSource(db);
     final catRepo = CategoryRepositoryImpl(catDs);
+    final subDs = SubcategoryLocalDataSource(db);
+    final subRepo = SubcategoryRepositoryImpl(subDs);
 
     _getTransactions = GetTransactionsUseCase(txRepo);
     _create = CreateTransactionUseCase(txRepo);
@@ -78,6 +89,13 @@ class TransactionController extends GetxController {
     _getSummary = GetTransactionSummaryUseCase(txRepo);
     _getWallets = GetAllWalletsUseCase(walletRepo);
     _getCategories = GetCategoriesUseCase(catRepo);
+    _getSubcategories = GetSubcategoriesUseCase(subRepo);
+
+    ever(selectedCategoryId, (catId) {
+      selectedSubcategoryId.value = null;
+      subcategories.clear();
+      if (catId != null) _loadSubcategories(catId);
+    });
 
     _loadWallets();
     _loadCategories();
@@ -104,6 +122,11 @@ class TransactionController extends GetxController {
   Future<void> _loadCategories() async {
     final r = await _getCategories(GetCategoriesParams(_userId));
     r.fold((_) {}, (list) => categories.value = list);
+  }
+
+  Future<void> _loadSubcategories(String categoryId) async {
+    final r = await _getSubcategories(GetSubcategoriesParams(categoryId));
+    r.fold((_) {}, (list) => subcategories.value = list as List<SubcategoryEntity>);
   }
 
   Future<void> loadTransactions() async {
@@ -166,14 +189,17 @@ class TransactionController extends GetxController {
       selectedCategoryId.value = existing.categoryId;
       selectedDate.value = existing.date;
       receiptImagePath.value = existing.receiptImagePath;
+      selectedSubcategoryId.value = existing.subcategoryId;
     } else {
       amountCtrl.clear();
       noteCtrl.clear();
       selectedTab.value = 0;
       selectedDate.value = DateTime.now();
       selectedCategoryId.value = null;
+      selectedSubcategoryId.value = null;
       selectedToWalletId.value = null;
       receiptImagePath.value = null;
+      subcategories.clear();
       // selectedWalletId is set reactively inside _loadWallets() when list arrives.
       selectedWalletId.value = null;
     }
@@ -214,6 +240,7 @@ class TransactionController extends GetxController {
         walletId: selectedWalletId.value!,
         toWalletId: type == 'transfer' ? selectedToWalletId.value : null,
         categoryId: selectedCategoryId.value,
+        subcategoryId: type != 'transfer' ? selectedSubcategoryId.value : null,
         type: type,
         amount: amount,
         date: selectedDate.value,

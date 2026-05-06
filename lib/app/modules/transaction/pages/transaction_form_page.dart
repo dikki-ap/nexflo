@@ -8,6 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/nexflo_button.dart';
+import '../../../core/utils/icon_mapper.dart';
 import '../../../domain/entities/transaction_entity.dart';
 import '../../../services/ocr_service.dart';
 
@@ -188,6 +189,7 @@ class TransactionFormPage extends GetView<TransactionController> {
                                       c.type.name == 'both')
                                   .toList();
                           return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Divider(
                                 height: 1,
@@ -212,6 +214,9 @@ class TransactionFormPage extends GetView<TransactionController> {
                                       horizontal: 16, vertical: 12),
                                 ),
                               ),
+                              // Subcategory chips
+                              if (controller.subcategories.isNotEmpty)
+                                _SubcategoryChips(isDark: isDark),
                             ],
                           );
                         }),
@@ -314,6 +319,147 @@ class TransactionFormPage extends GetView<TransactionController> {
         'Nov',
         'Dec'
       ][m];
+}
+
+class _SubcategoryChips extends GetView<TransactionController> {
+  final bool isDark;
+  const _SubcategoryChips({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final subs = controller.subcategories;
+      if (subs.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(
+            height: 1,
+            color: isDark ? AppColors.glassBorder : AppColors.grey200,
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.fromLTRB(16, 10, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SUBCATEGORY',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.4)
+                        : AppColors.grey400,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    // None chip
+                    GestureDetector(
+                      onTap: () =>
+                          controller.selectedSubcategoryId.value = null,
+                      child: AnimatedContainer(
+                        duration: AppAnimations.fast,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: controller.selectedSubcategoryId.value == null
+                              ? AppColors.tealMid.withValues(alpha: 0.15)
+                              : (isDark
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : AppColors.grey100),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color:
+                                controller.selectedSubcategoryId.value == null
+                                    ? AppColors.tealMid
+                                    : Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'None',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: controller.selectedSubcategoryId.value ==
+                                    null
+                                ? AppColors.tealMid
+                                : (isDark
+                                    ? Colors.white.withValues(alpha: 0.5)
+                                    : AppColors.grey500),
+                          ),
+                        ),
+                      ),
+                    ),
+                    ...subs.map((s) {
+                      final hex = s.colorHex.replaceAll('#', '');
+                      final color = Color(int.parse('FF$hex', radix: 16));
+                      final isSelected =
+                          controller.selectedSubcategoryId.value == s.id;
+                      return GestureDetector(
+                        onTap: () =>
+                            controller.selectedSubcategoryId.value = s.id,
+                        child: AnimatedContainer(
+                          duration: AppAnimations.fast,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? color.withValues(alpha: 0.15)
+                                : (isDark
+                                    ? Colors.white.withValues(alpha: 0.06)
+                                    : AppColors.grey100),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? color
+                                  : Colors.transparent,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(IconMapper.get(s.iconName),
+                                  size: 12,
+                                  color: isSelected
+                                      ? color
+                                      : (isDark
+                                          ? Colors.white.withValues(alpha: 0.4)
+                                          : AppColors.grey400)),
+                              const SizedBox(width: 4),
+                              Text(
+                                s.name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? color
+                                      : (isDark
+                                          ? Colors.white.withValues(alpha: 0.5)
+                                          : AppColors.grey500),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
+  }
 }
 
 class _TypeSelector extends StatelessWidget {

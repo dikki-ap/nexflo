@@ -8,6 +8,28 @@ class SubcategoryLocalDataSource {
   final AppDatabase _db;
   SubcategoryLocalDataSource(this._db);
 
+  Future<void> insertMany(List<SubcategoriesCompanion> companions) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(_db.subcategories, companions);
+      });
+    } catch (e) {
+      throw LocalDatabaseException('Failed to insert subcategories: $e');
+    }
+  }
+
+  Future<bool> hasDefaultSubcategories(String userId) async {
+    try {
+      final rows = await (_db.select(_db.subcategories)
+            ..where((s) => s.userId.equals(userId))
+            ..where((s) => s.isDefault.equals(true)))
+          .get();
+      return rows.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<List<SubcategoryModel>> getByCategoryId(String categoryId) async {
     try {
       final rows = await (_db.select(_db.subcategories)
