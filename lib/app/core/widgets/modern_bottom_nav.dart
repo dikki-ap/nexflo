@@ -79,30 +79,45 @@ class ModernBottomNav extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(items.length, (i) {
-                // Center slot = FAB add button
-                if (i == items.length ~/ 2 && onFabTap != null) {
-                  return _FabItem(
-                    accentColor: accentColor,
-                    onTap: onFabTap!,
-                  );
-                }
-                return _NavItemWidget(
-                  item: items[i],
-                  isActive: currentIndex == i,
-                  accentColor: accentColor,
-                  isDark: isDark,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onTap(i);
-                  },
-                );
-              }),
+              children: _buildChildren(isDark),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+  // Inserts the FAB BETWEEN items at the halfway point (not replacing any item).
+  // With 3 items [Home, Statistics, Settings]: Home | [FAB] | Statistics | Settings
+  List<Widget> _buildChildren(bool isDark) {
+    if (onFabTap == null) {
+      return List.generate(
+        items.length,
+        (i) => _NavItemWidget(
+          item: items[i],
+          isActive: currentIndex == i,
+          accentColor: accentColor,
+          isDark: isDark,
+          onTap: () => onTap(i),
+        ),
+      );
+    }
+    final half = items.length ~/ 2;
+    final result = <Widget>[];
+    for (int i = 0; i < items.length; i++) {
+      if (i == half) {
+        result.add(_FabItem(accentColor: accentColor, onTap: onFabTap!));
+      }
+      result.add(_NavItemWidget(
+        item: items[i],
+        isActive: currentIndex == i,
+        accentColor: accentColor,
+        isDark: isDark,
+        onTap: () => onTap(i),
+      ));
+    }
+    return result;
   }
 }
 

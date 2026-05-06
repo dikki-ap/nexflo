@@ -10,6 +10,7 @@ import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/nexflo_button.dart';
 import '../../../core/utils/icon_mapper.dart';
 import '../../../domain/entities/transaction_entity.dart';
+import '../../../services/currency_service.dart';
 import '../../../services/ocr_service.dart';
 
 class TransactionFormPage extends GetView<TransactionController> {
@@ -93,11 +94,14 @@ class TransactionFormPage extends GetView<TransactionController> {
                                 const EdgeInsets.symmetric(vertical: 8),
                             prefixIcon: Padding(
                               padding:
-                                  const EdgeInsets.fromLTRB(0, 8, 8, 0),
-                              child: Icon(
-                                Icons.attach_money_rounded,
-                                color: AppColors.tealMid,
-                                size: 28,
+                                  const EdgeInsets.fromLTRB(16, 14, 4, 0),
+                              child: Text(
+                                Get.find<CurrencyService>().baseCurrency,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.tealMid,
+                                ),
                               ),
                             ),
                           ),
