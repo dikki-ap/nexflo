@@ -1,81 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
 import '../transaction/pages/transaction_list_page.dart';
 import '../statistics/pages/statistics_page.dart';
 import '../settings/pages/settings_page.dart';
 import '../../config/routes/app_routes.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/widgets/modern_bottom_nav.dart';
 import 'main_nav_controller.dart';
 
 class MainNavPage extends GetView<MainNavController> {
   const MainNavPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() => Scaffold(
-          body: IndexedStack(
-            index: controller.currentIndex.value,
-            children: const [
-              DashboardPage(),
-              TransactionListPage(),
-              StatisticsPage(),
-              const SettingsPage(),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: controller.currentIndex.value,
-            onDestinationSelected: controller.changePage,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Dashboard',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long),
-                label: 'Transactions',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart),
-                label: 'Statistics',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Settings',
-              ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => Get.toNamed(AppRoutes.transactionAdd),
-            child: const Icon(Icons.add),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        ));
-  }
-}
+  static const _pages = [
+    DashboardPage(),
+    TransactionListPage(),
+    StatisticsPage(),
+    SettingsPage(),
+  ];
 
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  const _PlaceholderPage(this.title);
+  static const _navItems = [
+    NavItem(
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home_rounded,
+      label: 'Home',
+    ),
+    NavItem(
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long_rounded,
+      label: 'Transactions',
+    ),
+    NavItem(
+      icon: Icons.bar_chart_outlined,
+      activeIcon: Icons.bar_chart_rounded,
+      label: 'Statistics',
+    ),
+    NavItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          '$title\n(Coming soon)',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.4)),
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+      extendBody: true,
+      body: Obx(() => IndexedStack(
+            index: controller.currentIndex.value,
+            children: _pages,
+          )),
+      bottomNavigationBar: Obx(
+        () => ModernBottomNav(
+          items: _navItems,
+          currentIndex: controller.currentIndex.value,
+          onTap: controller.changePage,
         ),
       ),
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          Get.toNamed(AppRoutes.transactionAdd);
+        },
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: AppColors.tealGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.tealGlow,
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
