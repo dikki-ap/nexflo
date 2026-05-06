@@ -9,6 +9,7 @@ import '../../../core/utils/icon_mapper.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/nexflo_button.dart';
 import '../../../domain/entities/wallet_entity.dart';
+import '../../../services/currency_service.dart';
 
 class WalletFormPage extends GetView<WalletController> {
   const WalletFormPage({super.key});
@@ -73,48 +74,129 @@ class WalletFormPage extends GetView<WalletController> {
             ),
             const SizedBox(height: 16),
 
-            // Balance fields
+            // Initial Balance — prominent card matching transaction amount style
             GlassCard(
               borderRadius: 18,
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'INITIAL BALANCE',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.4)
+                          : AppColors.grey400,
+                    ),
+                  ),
                   TextField(
                     controller: controller.balanceCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Initial Balance',
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppColors.grey900,
+                      letterSpacing: -0.5,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0',
+                      hintStyle: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : AppColors.grey300,
+                      ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 8),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 14, 8, 0),
+                        child: Text(
+                          Get.find<CurrencyService>().baseCurrency,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.tealMid,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
+                  // Credit limit for credit card type
                   Obx(() {
-                    if (controller.selectedType.value != WalletType.creditCard) {
+                    if (controller.selectedType.value !=
+                        WalletType.creditCard) {
                       return const SizedBox.shrink();
                     }
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Divider(
-                          height: 1,
+                          height: 24,
                           color: isDark
                               ? AppColors.glassBorder
                               : AppColors.grey200,
+                        ),
+                        Text(
+                          'CREDIT LIMIT',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.4)
+                                : AppColors.grey400,
+                          ),
                         ),
                         TextField(
                           controller: controller.creditLimitCtrl,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: 'Credit Limit',
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.]')),
+                          ],
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.grey900,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '0',
+                            hintStyle: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : AppColors.grey300,
+                            ),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 8),
+                            prefixIcon: Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0, 12, 8, 0),
+                              child: Text(
+                                Get.find<CurrencyService>().baseCurrency,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.tealMid,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],

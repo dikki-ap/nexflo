@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../config/routes/app_routes.dart';
 import '../../services/auth_service.dart';
+import '../../services/currency_service.dart';
 import '../../data/datasources/local/settings_local_ds.dart';
 import '../../data/database/app_database.dart';
 
@@ -30,6 +31,8 @@ class SplashController extends GetxController {
       Get.offAllNamed(AppRoutes.onboarding);
       return;
     }
+
+    Get.find<CurrencyService>().setBaseCurrency(settings.baseCurrencyCode);
 
     if (settings.isBiometricEnabled || settings.isPinEnabled) {
       Get.offAllNamed(AppRoutes.lock);

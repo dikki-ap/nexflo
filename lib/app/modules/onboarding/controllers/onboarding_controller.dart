@@ -7,6 +7,7 @@ import '../../../data/datasources/local/category_local_ds.dart';
 import '../../../data/datasources/local/currency_local_ds.dart';
 import '../../../data/datasources/local/settings_local_ds.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/currency_service.dart';
 
 class OnboardingController extends GetxController {
   final pageController = PageController();
@@ -75,6 +76,8 @@ class OnboardingController extends GetxController {
 
       final currencyDs = CurrencyLocalDataSource(db);
       await currencyDs.seedCurrencies();
+
+      Get.find<CurrencyService>().setBaseCurrency(selectedCurrencyCode.value);
 
       Get.offAllNamed(AppRoutes.main);
     } finally {

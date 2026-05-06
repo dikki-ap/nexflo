@@ -18,6 +18,7 @@ import '../../../domain/usecases/wallet/adjust_wallet_balance_usecase.dart';
 import '../../../domain/usecases/transaction/create_transaction_usecase.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/currency_service.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class WalletController extends GetxController {
   final wallets = <WalletEntity>[].obs;
@@ -147,6 +148,9 @@ class WalletController extends GetxController {
 
     isLoading.value = false;
     await loadWallets();
+    if (Get.isRegistered<DashboardController>()) {
+      Get.find<DashboardController>().loadAll();
+    }
     Get.back();
   }
 

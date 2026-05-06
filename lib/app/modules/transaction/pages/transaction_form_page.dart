@@ -13,13 +13,29 @@ import '../../../domain/entities/transaction_entity.dart';
 import '../../../services/currency_service.dart';
 import '../../../services/ocr_service.dart';
 
-class TransactionFormPage extends GetView<TransactionController> {
+class TransactionFormPage extends StatefulWidget {
   const TransactionFormPage({super.key});
 
   @override
+  State<TransactionFormPage> createState() => _TransactionFormPageState();
+}
+
+class _TransactionFormPageState extends State<TransactionFormPage> {
+  late final TransactionController controller;
+  late final TransactionEntity? existing;
+  late final bool isEdit;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<TransactionController>();
+    existing = Get.arguments as TransactionEntity?;
+    isEdit = existing != null;
+    controller.prepareForm(existing);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final existing = Get.arguments as TransactionEntity?;
-    final isEdit = existing != null;
     final isDark = context.isDarkMode;
     final hPad = context.horizontalPadding;
 
@@ -72,6 +88,10 @@ class TransactionFormPage extends GetView<TransactionController> {
                           controller: controller.amountCtrl,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9.]')),
+                          ],
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -119,24 +139,33 @@ class TransactionFormPage extends GetView<TransactionController> {
                     child: Column(
                       children: [
                         // Wallet picker
-                        Obx(() => DropdownButtonFormField<String>(
-                              value: controller.selectedWalletId.value,
-                              items: controller.wallets
-                                  .map((w) => DropdownMenuItem(
-                                      value: w.id,
-                                      child: Text(w.name)))
-                                  .toList(),
-                              onChanged: (v) =>
-                                  controller.selectedWalletId.value = v,
-                              decoration: const InputDecoration(
-                                labelText: 'From Wallet',
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                              ),
-                            )),
+                        Obx(() {
+                          final wallets = controller.wallets;
+                          final ids = wallets.map((w) => w.id).toSet();
+                          final currentId = ids.contains(
+                                  controller.selectedWalletId.value)
+                              ? controller.selectedWalletId.value
+                              : null;
+                          return DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            value: currentId,
+                            items: wallets
+                                .map((w) => DropdownMenuItem(
+                                    value: w.id, child: Text(w.name)))
+                                .toList(),
+                            hint: const Text('Select wallet'),
+                            onChanged: (v) =>
+                                controller.selectedWalletId.value = v,
+                            decoration: const InputDecoration(
+                              labelText: 'From Wallet',
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                            ),
+                          );
+                        }),
                         // To wallet (transfer only)
                         Obx(() {
                           if (controller.selectedTab.value != 2) {
@@ -151,6 +180,7 @@ class TransactionFormPage extends GetView<TransactionController> {
                                     : AppColors.grey200,
                               ),
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: controller.selectedToWalletId.value,
                                 items: controller.wallets
                                     .where((w) =>
@@ -160,6 +190,7 @@ class TransactionFormPage extends GetView<TransactionController> {
                                         value: w.id,
                                         child: Text(w.name)))
                                     .toList(),
+                                hint: const Text('Select wallet'),
                                 onChanged: (v) =>
                                     controller.selectedToWalletId.value = v,
                                 decoration: const InputDecoration(

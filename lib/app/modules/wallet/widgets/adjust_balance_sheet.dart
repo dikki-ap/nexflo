@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../domain/entities/wallet_entity.dart';
 import '../../../services/currency_service.dart';
@@ -50,6 +51,9 @@ class _AdjustBalanceSheetState extends State<AdjustBalanceSheet> {
             controller: _ctrl,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
             decoration: InputDecoration(
               labelText: 'New Balance',
               prefixText: '${Get.find<CurrencyService>().baseCurrency} ',
