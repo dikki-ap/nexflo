@@ -8,6 +8,7 @@ import '../../../core/constants/sheets_constants.dart';
 import '../../../core/errors/exceptions.dart';
 
 class SheetsRemoteDataSource {
+  final GoogleSignIn _signIn = GoogleSignIn();
   static const _sheetHeaders = <String, List<String>>{
     SheetsConstants.sheetMeta: [
       'app_version',
@@ -72,7 +73,7 @@ class SheetsRemoteDataSource {
   };
 
   Future<SheetsApi> _getApi() async {
-    final account = await GoogleSignIn.instance.currentUser.first;
+    final account = _signIn.currentUser;
     if (account == null) throw const AuthException('Not signed in');
     final headers = await account.authHeaders;
     final client = _AuthenticatedClient(http.Client(), headers);

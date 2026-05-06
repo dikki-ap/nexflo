@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart' show Value;
+
 import '../../domain/entities/user_entity.dart';
 
 // NOTE: fromDrift() references Drift-generated type 'User'.

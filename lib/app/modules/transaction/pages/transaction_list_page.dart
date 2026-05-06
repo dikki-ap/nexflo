@@ -209,7 +209,7 @@ class _TxSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildLeading(BuildContext context) =>
-      IconButton(icon: const Icon(Icons.arrow_back), onPressed: close);
+      IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
 
   @override
   Widget buildResults(BuildContext context) {

@@ -95,7 +95,7 @@ class WalletController extends GetxController {
       balanceCtrl.text = '0';
       creditLimitCtrl.clear();
       selectedType.value = WalletType.cash;
-      selectedColor.value = AppColors.accentTeal;
+      selectedColor.value = AppColors.teal;
       selectedIcon.value = 'wallet';
       selectedCurrency.value = 'IDR';
       isExcludeTotal.value = false;
