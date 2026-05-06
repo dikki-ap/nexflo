@@ -99,7 +99,7 @@ class GoalController extends GetxController {
       return;
     }
     final colorHex =
-        '#${selectedColor.value.value.toRadixString(16).substring(2).toUpperCase()}';
+        '#${selectedColor.value.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
 
     isLoading.value = true;
     if (existing == null) {

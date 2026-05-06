@@ -64,7 +64,7 @@ class OnboardingController extends GetxController {
 
       await settingsDs.update(
         (await settingsDs.getByUserId(user.id))!
-          ..copyWith(
+          .copyWith(
             baseCurrencyCode: selectedCurrencyCode.value,
             cutoffDate: selectedCutoffDate.value,
           ),
