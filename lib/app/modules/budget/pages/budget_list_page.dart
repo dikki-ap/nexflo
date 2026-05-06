@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/enums/budget_period.dart';
-import '../../../core/utils/color_helper.dart';
+import '../../../core/extensions/context_extensions.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/section_label.dart';
+import '../../../core/widgets/shimmer_loading.dart';
+import '../../../core/widgets/staggered_list.dart';
 import '../../../domain/entities/budget_entity.dart';
 import '../controllers/budget_controller.dart';
 
@@ -12,37 +16,85 @@ class BudgetListPage extends GetView<BudgetController> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final hPad = context.horizontalPadding;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Budgets')),
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
+      appBar: AppBar(
+        title: const Text('Budgets'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return ShimmerLoading(
+            isLoading: true,
+            child: ListView.builder(
+              padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 100),
+              itemCount: 5,
+              itemBuilder: (_, __) => const ShimmerCard(
+                height: 120,
+                horizontalMargin: 0,
+                borderRadius: 18,
+              ),
+            ),
+          );
         }
         if (controller.budgets.isEmpty) {
           return _EmptyState();
         }
-        return Column(
-          children: [
-            if (controller.alertBudgets.isNotEmpty)
-              _AlertBanner(controller.alertBudgets.length),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                itemCount: controller.budgets.length,
-                itemBuilder: (_, i) =>
-                    _BudgetCard(controller.budgets[i], controller),
-              ),
-            ),
-          ],
+        return ListView.builder(
+          padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 100),
+          itemCount: controller.budgets.length + (controller.alertBudgets.isNotEmpty ? 1 : 0),
+          itemBuilder: (_, i) {
+            if (controller.alertBudgets.isNotEmpty && i == 0) {
+              return _AlertBanner(controller.alertBudgets.length);
+            }
+            final idx = controller.alertBudgets.isNotEmpty ? i - 1 : i;
+            return StaggeredItem(
+              delayIndex: idx,
+              child: _BudgetCard(controller.budgets[idx], controller, isDark),
+            );
+          },
         );
       }),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
           controller.initForm();
           Get.toNamed(AppRoutes.budgetAdd);
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Budget'),
+        child: Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: AppColors.tealGradient,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.tealGlow,
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, color: Colors.white, size: 22),
+              SizedBox(width: 6),
+              Text(
+                'Add Budget',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -54,24 +106,29 @@ class _AlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.budgetAlert.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return GlassCard(
+      borderRadius: 14,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded,
-              color: AppColors.budgetAlert, size: 18),
-          const SizedBox(width: 8),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.budgetAlert.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.warning_amber_rounded,
+                color: AppColors.budgetAlert, size: 20),
+          ),
+          const SizedBox(width: 12),
           Text(
             '$count budget${count > 1 ? 's' : ''} reaching limit',
             style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.budgetAlert,
-                fontWeight: FontWeight.w500),
+              fontSize: 13,
+              color: AppColors.budgetAlert,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -82,23 +139,43 @@ class _AlertBanner extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.pie_chart_outline,
-              size: 64,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.2)),
-          const SizedBox(height: 12),
-          Text('No budgets yet',
-              style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.4))),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: const BoxDecoration(
+              color: AppColors.tealGlowSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.pie_chart_outline_rounded,
+              size: 36,
+              color: AppColors.tealMid,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No budgets yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : AppColors.grey900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap + to set your first budget',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : AppColors.grey400,
+            ),
+          ),
         ],
       ),
     );
@@ -108,7 +185,8 @@ class _EmptyState extends StatelessWidget {
 class _BudgetCard extends StatelessWidget {
   final BudgetEntity budget;
   final BudgetController ctrl;
-  const _BudgetCard(this.budget, this.ctrl);
+  final bool isDark;
+  const _BudgetCard(this.budget, this.ctrl, this.isDark);
 
   @override
   Widget build(BuildContext context) {
@@ -118,119 +196,157 @@ class _BudgetCard extends StatelessWidget {
     final effectiveLimit = ctrl.effectiveLimitFor(budget);
     final rollover = ctrl.rolloverAmounts[budget.id] ?? 0;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(budget.name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 15)),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Text(
-                            budget.period.label,
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.5)),
-                          ),
-                          if (rollover > 0) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              '+${_fmt(rollover)} rollover',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.income.withValues(alpha: 0.8),
-                                  fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ],
+    return GlassCard(
+      borderRadius: 18,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      budget.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : AppColors.grey900,
                       ),
-                    ],
-                  ),
-                ),
-                if (progress > 1)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.expense.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text('Over Budget',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.expense,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    if (v == 'edit') {
-                      ctrl.initForm(budget);
-                      Get.toNamed(
-                          AppRoutes.budgetEdit.replaceFirst(':id', budget.id),
-                          arguments: budget);
-                    } else {
-                      _confirmDelete(context);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    const PopupMenuItem(
-                        value: 'delete', child: Text('Delete')),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Text(
+                          budget.period.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.45)
+                                : AppColors.grey500,
+                          ),
+                        ),
+                        if (rollover > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.income.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '+${_fmt(rollover)} rollover',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.income,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                minHeight: 8,
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.08),
-                valueColor: AlwaysStoppedAnimation(progressColor),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _fmt(spent),
-                  style: TextStyle(
+              if (progress > 1)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.expense.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Over Budget',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.expense,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: progressColor),
+                    ),
+                  ),
                 ),
-                Text(
-                  'of ${_fmt(effectiveLimit)}',
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5)),
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  size: 20,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : AppColors.grey400,
+                ),
+                onSelected: (v) {
+                  if (v == 'edit') {
+                    ctrl.initForm(budget);
+                    Get.toNamed(
+                      AppRoutes.budgetEdit.replaceFirst(':id', budget.id),
+                      arguments: budget,
+                    );
+                  } else {
+                    _confirmDelete(context);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Gradient progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Stack(
+              children: [
+                Container(
+                  height: 8,
+                  color: progressColor.withValues(alpha: 0.12),
+                ),
+                FractionallySizedBox(
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          progressColor.withValues(alpha: 0.75),
+                          progressColor,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _fmt(spent),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: progressColor,
+                ),
+              ),
+              Text(
+                'of ${_fmt(effectiveLimit)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.45)
+                      : AppColors.grey500,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
