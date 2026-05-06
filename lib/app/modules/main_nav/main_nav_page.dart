@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../dashboard/pages/dashboard_page.dart';
+import '../transaction/pages/transaction_list_page.dart';
 import '../statistics/pages/statistics_page.dart';
 import '../settings/pages/settings_page.dart';
 import '../../config/routes/app_routes.dart';
@@ -14,6 +15,7 @@ class MainNavPage extends GetView<MainNavController> {
 
   static const _pages = [
     DashboardPage(),
+    TransactionListPage(),
     StatisticsPage(),
     SettingsPage(),
   ];
@@ -23,6 +25,11 @@ class MainNavPage extends GetView<MainNavController> {
       icon: Icons.home_outlined,
       activeIcon: Icons.home_rounded,
       label: 'Home',
+    ),
+    NavItem(
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long_rounded,
+      label: 'Transactions',
     ),
     NavItem(
       icon: Icons.bar_chart_outlined,

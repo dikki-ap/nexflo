@@ -16,8 +16,8 @@ class NavItem {
 }
 
 /// Floating glassmorphic bottom navigation bar.
-/// Active item shows pill highlight + teal color + glow.
-/// Center item (index 2) is the FAB-style add button.
+/// When [onFabTap] is provided, a circular FAB is inserted at the midpoint
+/// between items — it does NOT replace any item.
 class ModernBottomNav extends StatelessWidget {
   const ModernBottomNav({
     super.key,
@@ -33,6 +33,39 @@ class ModernBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
   final VoidCallback? onFabTap;
   final Color accentColor;
+
+  /// Inserts the FAB BETWEEN items at items.length ~/ 2.
+  /// Item indices passed to [onTap] always match their position in [items],
+  /// so no external remapping is needed.
+  List<Widget> _buildChildren(bool isDark) {
+    if (onFabTap == null) {
+      return List.generate(
+        items.length,
+        (i) => _NavItemWidget(
+          item: items[i],
+          isActive: currentIndex == i,
+          accentColor: accentColor,
+          isDark: isDark,
+          onTap: () => onTap(i),
+        ),
+      );
+    }
+    final half = items.length ~/ 2;
+    final result = <Widget>[];
+    for (int i = 0; i < items.length; i++) {
+      if (i == half) {
+        result.add(_FabItem(accentColor: accentColor, onTap: onFabTap!));
+      }
+      result.add(_NavItemWidget(
+        item: items[i],
+        isActive: currentIndex == i,
+        accentColor: accentColor,
+        isDark: isDark,
+        onTap: () => onTap(i),
+      ));
+    }
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +104,9 @@ class ModernBottomNav extends StatelessWidget {
               color: bg,
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: isDark ? AppColors.glassBorder : Colors.white.withValues(alpha: 0.7),
+                color: isDark
+                    ? AppColors.glassBorder
+                    : Colors.white.withValues(alpha: 0.7),
                 width: 1,
               ),
               boxShadow: shadow,
@@ -85,39 +120,6 @@ class ModernBottomNav extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-  // Inserts the FAB BETWEEN items at the halfway point (not replacing any item).
-  // With 3 items [Home, Statistics, Settings]: Home | [FAB] | Statistics | Settings
-  List<Widget> _buildChildren(bool isDark) {
-    if (onFabTap == null) {
-      return List.generate(
-        items.length,
-        (i) => _NavItemWidget(
-          item: items[i],
-          isActive: currentIndex == i,
-          accentColor: accentColor,
-          isDark: isDark,
-          onTap: () => onTap(i),
-        ),
-      );
-    }
-    final half = items.length ~/ 2;
-    final result = <Widget>[];
-    for (int i = 0; i < items.length; i++) {
-      if (i == half) {
-        result.add(_FabItem(accentColor: accentColor, onTap: onFabTap!));
-      }
-      result.add(_NavItemWidget(
-        item: items[i],
-        isActive: currentIndex == i,
-        accentColor: accentColor,
-        isDark: isDark,
-        onTap: () => onTap(i),
-      ));
-    }
-    return result;
   }
 }
 
