@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/sheets/v4.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../core/constants/sheets_constants.dart';
 import '../../../core/errors/exceptions.dart';
-import 'google_auth_remote_ds.dart';
 
 class SheetsRemoteDataSource {
   static const _sheetHeaders = <String, List<String>>{
@@ -72,10 +72,8 @@ class SheetsRemoteDataSource {
   };
 
   Future<SheetsApi> _getApi() async {
-    final account = GoogleAuthRemoteDataSource.currentUser;
-    if (account == null) throw const AuthException('Not signed in');
-    final headers = await account.authHeaders;
-    final client = _AuthenticatedClient(http.Client(), headers);
+    final client = await GoogleSignIn.instance.authenticatedClient();
+    if (client == null) throw const AuthException('Not signed in');
     return SheetsApi(client);
   }
 
@@ -273,21 +271,3 @@ class SheetsRemoteDataSource {
   }
 }
 
-class _AuthenticatedClient extends http.BaseClient {
-  final http.Client _inner;
-  final Map<String, String> _headers;
-
-  _AuthenticatedClient(this._inner, this._headers);
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    request.headers.addAll(_headers);
-    return _inner.send(request);
-  }
-
-  @override
-  void close() {
-    _inner.close();
-    super.close();
-  }
-}

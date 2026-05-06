@@ -9,7 +9,12 @@ class GoogleAuthRemoteDataSource {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(
+      scopes: [
+        SheetsConstants.scopeSpreadsheets,
+        SheetsConstants.scopeDriveFile,
+      ],
+    );
     _initialized = true;
   }
 
@@ -18,10 +23,6 @@ class GoogleAuthRemoteDataSource {
       await initialize();
       final account = await GoogleSignIn.instance.authenticate();
       _currentAccount = account;
-      await GoogleSignIn.instance.requestScopes([
-        SheetsConstants.scopeSpreadsheets,
-        SheetsConstants.scopeDriveFile,
-      ]);
       return account;
     } on AuthException {
       rethrow;
