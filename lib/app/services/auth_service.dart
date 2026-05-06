@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../data/database/app_database.dart';
 import '../data/datasources/local/user_local_ds.dart';
 import '../data/datasources/remote/google_auth_remote_ds.dart';
 import '../data/repositories/auth_repository_impl.dart';
