@@ -158,11 +158,11 @@ class _ManualRateSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader('Manual Rate Override'),
+        _SectionHeader('Custom Exchange Rate'),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Override a specific exchange rate when offline or for custom rates.',
+            'Set a custom exchange rate when offline or to override live rates.',
             style: TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ),

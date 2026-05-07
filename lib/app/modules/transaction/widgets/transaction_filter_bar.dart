@@ -21,11 +21,12 @@ class TransactionFilterBar extends StatelessWidget {
                 child: FilterChip(
                   label: Text(p.label),
                   selected: selected,
-                  selectedColor: scheme.primary.withValues(alpha: 0.18),
-                  checkmarkColor: scheme.primary,
+                  selectedColor: scheme.primary,
+                  showCheckmark: false,
                   labelStyle: TextStyle(
-                    color: selected ? scheme.primary : null,
+                    color: selected ? Colors.white : null,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 12,
                   ),
                   side: BorderSide(
                     color: selected

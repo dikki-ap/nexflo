@@ -35,10 +35,26 @@ class TransactionTile extends StatelessWidget {
             : AppColors.income;
     final sign = isExpense ? '-' : isTransfer ? '' : '+';
 
+    final isGoal = category == null &&
+        tx.note != null &&
+        tx.note!.startsWith('Goal:');
+    final isDebt = category == null &&
+        tx.note != null &&
+        tx.note!.startsWith('Debt:');
     final catColor = category != null
         ? ColorHelper.fromHex(category!.colorHex)
-        : Colors.grey;
-    final catIcon = category != null ? IconMapper.get(category!.iconName) : Icons.swap_horiz;
+        : isGoal
+            ? AppColors.teal
+            : isDebt
+                ? AppColors.transfer
+                : Colors.grey;
+    final catIcon = category != null
+        ? IconMapper.get(category!.iconName)
+        : isGoal
+            ? Icons.savings_outlined
+            : isDebt
+                ? Icons.handshake_outlined
+                : Icons.swap_horiz;
 
     return Dismissible(
       key: ValueKey(tx.id),
@@ -65,13 +81,18 @@ class TransactionTile extends StatelessWidget {
           child: Icon(catIcon, color: catColor, size: 20),
         ),
         title: Text(
-          category?.name ?? (isTransfer ? 'Transfer' : 'Uncategorized'),
+          category?.name ??
+              (isTransfer
+                  ? 'Transfer'
+                  : isGoal || isDebt
+                      ? tx.note!
+                      : 'Uncategorized'),
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (tx.note != null && tx.note!.isNotEmpty)
+            if (!isGoal && !isDebt && tx.note != null && tx.note!.isNotEmpty)
               Text(tx.note!,
                   style: TextStyle(
                       fontSize: 12,

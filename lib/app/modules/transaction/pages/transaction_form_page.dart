@@ -156,12 +156,14 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                             hint: const Text('Select wallet'),
                             onChanged: (v) =>
                                 controller.selectedWalletId.value = v,
-                            decoration: const InputDecoration(
-                              labelText: 'From Wallet',
+                            decoration: InputDecoration(
+                              labelText: controller.selectedTab.value == 1
+                                  ? 'To Wallet'
+                                  : 'From Wallet',
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                             ),
                           );
