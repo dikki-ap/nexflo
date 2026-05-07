@@ -62,13 +62,14 @@ class GlassCard extends StatelessWidget {
     );
 
     if (onTap != null) {
+      final primary = Theme.of(context).colorScheme.primary;
       card = Material(
         color: Colors.transparent,
         shape: shape,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(borderRadius),
-          splashColor: AppColors.tealGlowSoft,
+          splashColor: primary.withValues(alpha: 0.1),
           highlightColor: Colors.transparent,
           child: card,
         ),

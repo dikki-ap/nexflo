@@ -7,7 +7,7 @@ class GradientCard extends StatelessWidget {
   const GradientCard({
     super.key,
     required this.child,
-    this.gradient = AppColors.tealGradient,
+    this.gradient,
     this.borderRadius = 24.0,
     this.padding,
     this.margin,
@@ -18,7 +18,7 @@ class GradientCard extends StatelessWidget {
   });
 
   final Widget child;
-  final LinearGradient gradient;
+  final LinearGradient? gradient;
   final double borderRadius;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -29,16 +29,18 @@ class GradientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final effectiveGradient = gradient ?? AppColors.primaryGradient(primary);
     Widget card = Container(
       height: height,
       width: width,
       decoration: BoxDecoration(
-        gradient: gradient,
+        gradient: effectiveGradient,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: withGlow
             ? [
                 BoxShadow(
-                  color: AppColors.tealGlow,
+                  color: primary.withValues(alpha: 0.3),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                   spreadRadius: -4,

@@ -12,7 +12,7 @@ class NexFloButton extends StatefulWidget {
     this.icon,
     this.isLoading = false,
     this.width,
-    this.gradient = AppColors.tealGradient,
+    this.gradient,
     this.borderRadius = 16.0,
     this.padding,
     this.textStyle,
@@ -23,7 +23,7 @@ class NexFloButton extends StatefulWidget {
   final IconData? icon;
   final bool isLoading;
   final double? width;
-  final LinearGradient gradient;
+  final LinearGradient? gradient;
   final double borderRadius;
   final EdgeInsetsGeometry? padding;
   final TextStyle? textStyle;
@@ -68,6 +68,8 @@ class _NexFloButtonState extends State<NexFloButton>
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final effectiveGradient = widget.gradient ?? AppColors.primaryGradient(primary);
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -86,15 +88,13 @@ class _NexFloButtonState extends State<NexFloButton>
           padding: widget.padding ??
               const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            gradient: widget.onPressed == null
-                ? null
-                : widget.gradient,
+            gradient: widget.onPressed == null ? null : effectiveGradient,
             color: widget.onPressed == null ? AppColors.grey300 : null,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             boxShadow: widget.onPressed != null
                 ? [
                     BoxShadow(
-                      color: AppColors.tealGlow,
+                      color: primary.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),

@@ -29,6 +29,21 @@ class AppColors {
     end: Alignment.bottomCenter,
   );
 
+  static LinearGradient primaryGradient(Color c) {
+    final hsl = HSLColor.fromColor(c);
+    final lighter = hsl
+        .withLightness((hsl.lightness + 0.12).clamp(0.0, 1.0))
+        .toColor();
+    final darker = hsl
+        .withLightness((hsl.lightness - 0.08).clamp(0.0, 1.0))
+        .toColor();
+    return LinearGradient(
+      colors: [lighter, c, darker],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
   // ── Glow / shadow for accent elements ───────────────────
   static const tealGlow = Color(0x4D00BCD4); // 30% opacity
   static const tealGlowSoft = Color(0x1A00BCD4); // 10% opacity

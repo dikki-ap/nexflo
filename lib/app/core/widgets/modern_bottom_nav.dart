@@ -25,26 +25,21 @@ class ModernBottomNav extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.onFabTap,
-    this.accentColor = AppColors.teal,
   });
 
   final List<NavItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;
   final VoidCallback? onFabTap;
-  final Color accentColor;
 
-  /// Inserts the FAB BETWEEN items at items.length ~/ 2.
-  /// Item indices passed to [onTap] always match their position in [items],
-  /// so no external remapping is needed.
-  List<Widget> _buildChildren(bool isDark) {
+  List<Widget> _buildChildren(bool isDark, Color accent) {
     if (onFabTap == null) {
       return List.generate(
         items.length,
         (i) => _NavItemWidget(
           item: items[i],
           isActive: currentIndex == i,
-          accentColor: accentColor,
+          accentColor: accent,
           isDark: isDark,
           onTap: () => onTap(i),
         ),
@@ -54,12 +49,12 @@ class ModernBottomNav extends StatelessWidget {
     final result = <Widget>[];
     for (int i = 0; i < items.length; i++) {
       if (i == half) {
-        result.add(_FabItem(accentColor: accentColor, onTap: onFabTap!));
+        result.add(_FabItem(accentColor: accent, onTap: onFabTap!));
       }
       result.add(_NavItemWidget(
         item: items[i],
         isActive: currentIndex == i,
-        accentColor: accentColor,
+        accentColor: accent,
         isDark: isDark,
         onTap: () => onTap(i),
       ));
@@ -70,6 +65,7 @@ class ModernBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
     final bg = isDark
         ? AppColors.darkCard.withValues(alpha: 0.85)
         : Colors.white.withValues(alpha: 0.88);
@@ -114,7 +110,7 @@ class ModernBottomNav extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _buildChildren(isDark),
+              children: _buildChildren(isDark, accent),
             ),
           ),
         ),
@@ -233,22 +229,25 @@ class _FabItemState extends State<_FabItem>
               .evaluate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut)),
           child: child,
         ),
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: AppColors.tealGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.tealGlow,
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
-        ),
+        child: Builder(builder: (context) {
+          final primary = Theme.of(context).colorScheme.primary;
+          return Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient(primary),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
+          );
+        }),
       ),
     );
   }

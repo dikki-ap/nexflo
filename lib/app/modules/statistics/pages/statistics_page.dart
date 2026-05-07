@@ -42,7 +42,7 @@ class StatisticsPage extends GetView<StatisticsController> {
       ),
       body: RefreshIndicator(
         onRefresh: controller.loadAll,
-        color: AppColors.tealMid,
+        color: Theme.of(context).colorScheme.primary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: SafeArea(
@@ -136,7 +136,7 @@ class _PeriodFilter extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: isActive ? AppColors.tealGradient : null,
+                  gradient: isActive ? AppColors.primaryGradient(Theme.of(context).colorScheme.primary) : null,
                   color: isActive
                       ? null
                       : (isDark ? AppColors.darkCard : AppColors.lightCard),
