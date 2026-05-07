@@ -348,6 +348,20 @@ class _PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final walletId = _parseWalletId(payment.note);
+    final walletName = walletId != null
+        ? Get.find<DebtController>()
+            .wallets
+            .firstWhereOrNull((w) => w.id == walletId)
+            ?.name
+        : null;
+    final userNote = _parseUserNote(payment.note);
+    final subtitleText = walletName != null
+        ? '$walletName${userNote.isNotEmpty ? ' · $userNote' : ''}'
+        : userNote.isNotEmpty
+            ? userNote
+            : _fmtDate(payment.date);
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -362,8 +376,7 @@ class _PaymentTile extends StatelessWidget {
       title: Text(_fmt(payment.amount),
           style: const TextStyle(
               fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text(payment.note ?? _fmtDate(payment.date),
-          style: const TextStyle(fontSize: 12)),
+      subtitle: Text(subtitleText, style: const TextStyle(fontSize: 12)),
       trailing: Text(_fmtDate(payment.date),
           style: TextStyle(
               fontSize: 11,
@@ -372,6 +385,17 @@ class _PaymentTile extends StatelessWidget {
                   .onSurface
                   .withValues(alpha: 0.4))),
     );
+  }
+
+  String? _parseWalletId(String? note) {
+    if (note == null) return null;
+    final match = RegExp(r'^\[walletId:([^\]]+)\]').firstMatch(note);
+    return match?.group(1);
+  }
+
+  String _parseUserNote(String? note) {
+    if (note == null) return '';
+    return note.replaceFirst(RegExp(r'^\[walletId:[^\]]+\]\s*'), '');
   }
 
   String _fmt(double v) {

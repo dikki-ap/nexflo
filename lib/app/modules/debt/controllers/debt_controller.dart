@@ -237,13 +237,14 @@ class DebtController extends GetxController {
       return;
     }
 
+    final userNote = paymentNoteCtrl.text.trim();
+    final encodedNote =
+        '[walletId:${wallet.id}]${userNote.isNotEmpty ? ' $userNote' : ''}';
     final result = await _addPayment(AddPaymentParams(
       debtId: debt.id,
       amount: amount,
       date: DateTime.now(),
-      note: paymentNoteCtrl.text.trim().isEmpty
-          ? null
-          : paymentNoteCtrl.text.trim(),
+      note: encodedNote,
     ));
     result.fold((f) => Get.snackbar('Error', f.message), (_) {
       paymentAmountCtrl.clear();

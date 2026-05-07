@@ -166,6 +166,8 @@ class GoalDetailPage extends GetView<GoalController> {
                     Card(
                       child: Column(
                         children: history.map((tx) {
+                          final wallet = controller.wallets
+                              .firstWhereOrNull((w) => w.id == tx.walletId);
                           return ListTile(
                             leading: Container(
                               width: 38,
@@ -182,6 +184,18 @@ class GoalDetailPage extends GetView<GoalController> {
                               style: const TextStyle(
                                   fontSize: 13, fontWeight: FontWeight.w500),
                             ),
+                            subtitle: wallet != null
+                                ? Text(
+                                    wallet.name,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.5),
+                                    ),
+                                  )
+                                : null,
                             trailing: Text(
                               '+ $sym ${_fmt(tx.amount)}',
                               style: TextStyle(
