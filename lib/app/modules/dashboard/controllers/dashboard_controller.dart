@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../core/enums/filter_period.dart';
+import '../../main_nav/shared_filter_controller.dart';
 import '../../../data/datasources/local/wallet_local_ds.dart';
 import '../../../data/datasources/local/transaction_local_ds.dart';
 import '../../../data/datasources/local/category_local_ds.dart';
@@ -18,7 +19,6 @@ import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../services/auth_service.dart';
 
 class DashboardController extends GetxController {
-  final selectedPeriod = FilterPeriod.thisMonth.obs;
   final wallets = <WalletEntity>[].obs;
   final recentTransactions = <TransactionEntity>[].obs;
   final categories = <CategoryEntity>[].obs;
@@ -30,6 +30,11 @@ class DashboardController extends GetxController {
   late final GetTransactionsUseCase _getTransactions;
   late final GetTransactionSummaryUseCase _getSummary;
   late final GetCategoriesUseCase _getCategories;
+
+  SharedFilterController get _sharedFilter =>
+      Get.find<SharedFilterController>();
+
+  Rx<FilterPeriod> get selectedPeriod => _sharedFilter.selectedPeriod;
 
   UserEntity? get currentUser => Get.find<AuthService>().currentUser;
 
@@ -50,6 +55,7 @@ class DashboardController extends GetxController {
     _getCategories = GetCategoriesUseCase(
         CategoryRepositoryImpl(CategoryLocalDataSource(db)));
 
+    ever(_sharedFilter.selectedPeriod, (_) => loadAll());
     loadAll();
   }
 
@@ -64,8 +70,9 @@ class DashboardController extends GetxController {
     final futures = await Future.wait([
       _getWallets(GetAllWalletsParams(uid)),
       _getTransactions(GetTransactionsParams(
-          userId: uid, period: selectedPeriod.value)),
-      _getSummary(GetSummaryParams(userId: uid, period: selectedPeriod.value)),
+          userId: uid, period: _sharedFilter.selectedPeriod.value)),
+      _getSummary(GetSummaryParams(
+          userId: uid, period: _sharedFilter.selectedPeriod.value)),
       _getCategories(GetCategoriesParams(uid)),
     ]);
 
@@ -85,8 +92,8 @@ class DashboardController extends GetxController {
   }
 
   void changePeriod(FilterPeriod period) {
-    selectedPeriod.value = period;
-    loadAll();
+    _sharedFilter.changePeriod(period);
+    // loadAll() is triggered via ever() listener
   }
 
   CategoryEntity? categoryById(String? id) =>

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'main_nav_controller.dart';
+import 'shared_filter_controller.dart';
 import '../dashboard/controllers/dashboard_controller.dart';
 import '../statistics/controllers/statistics_controller.dart';
 import '../settings/controllers/settings_controller.dart';
@@ -9,6 +10,7 @@ class MainNavBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut(() => MainNavController());
+    Get.lazyPut(() => SharedFilterController(), fenix: true);
     // IndexedStack renders all 3 tab pages on first build — controllers must
     // be available before that. TransactionController is also registered here
     // (fenix) so the transaction-add FAB route works without a separate binding.

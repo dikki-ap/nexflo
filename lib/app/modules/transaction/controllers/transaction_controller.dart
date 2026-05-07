@@ -26,6 +26,7 @@ import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/subcategory/get_subcategories_usecase.dart';
 import '../../../services/auth_service.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
+import '../../main_nav/shared_filter_controller.dart';
 import '../../wallet/controllers/wallet_controller.dart';
 
 class TransactionController extends GetxController {
@@ -35,13 +36,15 @@ class TransactionController extends GetxController {
   final isLoading = false.obs;
 
   // Filters
-  final selectedPeriod = FilterPeriod.thisMonth.obs;
   final filterWalletId = Rxn<String>();
   final filterCategoryId = Rxn<String>();
   final filterType = Rxn<TransactionType>();
   final searchQuery = ''.obs;
-  DateTime? customStart;
-  DateTime? customEnd;
+
+  SharedFilterController get _sharedFilter =>
+      Get.find<SharedFilterController>();
+
+  Rx<FilterPeriod> get selectedPeriod => _sharedFilter.selectedPeriod;
 
   // Form fields
   final selectedTab = 0.obs; // 0=expense 1=income 2=transfer
@@ -107,6 +110,8 @@ class TransactionController extends GetxController {
       subcategories.clear();
     });
 
+    ever(_sharedFilter.selectedPeriod, (_) => loadTransactions());
+
     _loadWallets();
     _loadCategories();
     loadTransactions();
@@ -143,13 +148,13 @@ class TransactionController extends GetxController {
     isLoading.value = true;
     final r = await _getTransactions(GetTransactionsParams(
       userId: _userId,
-      period: selectedPeriod.value,
+      period: _sharedFilter.selectedPeriod.value,
       walletId: filterWalletId.value,
       categoryId: filterCategoryId.value,
       type: filterType.value,
       searchQuery: searchQuery.value.isEmpty ? null : searchQuery.value,
-      customStart: customStart,
-      customEnd: customEnd,
+      customStart: _sharedFilter.customStart.value,
+      customEnd: _sharedFilter.customEnd.value,
     ));
     r.fold(
       (f) => Get.snackbar('Error', f.message),
@@ -158,7 +163,7 @@ class TransactionController extends GetxController {
 
     final s = await _getSummary(GetSummaryParams(
       userId: _userId,
-      period: selectedPeriod.value,
+      period: _sharedFilter.selectedPeriod.value,
     ));
     s.fold((_) {}, (m) {
       totalIncome.value = m['income'] ?? 0;
@@ -168,19 +173,13 @@ class TransactionController extends GetxController {
   }
 
   void changePeriod(FilterPeriod p) {
-    selectedPeriod.value = p;
-    if (p != FilterPeriod.custom) {
-      customStart = null;
-      customEnd = null;
-    }
-    loadTransactions();
+    _sharedFilter.changePeriod(p);
+    // loadTransactions() is triggered via ever() listener
   }
 
   void applyCustomRange(DateTime start, DateTime end) {
-    customStart = start;
-    customEnd = end;
-    selectedPeriod.value = FilterPeriod.custom;
-    loadTransactions();
+    _sharedFilter.applyCustomRange(start, end);
+    // loadTransactions() is triggered via ever() listener
   }
 
   void applyFilter({
