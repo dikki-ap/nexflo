@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/icon_mapper.dart';
 import '../../../domain/entities/goal_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/goal_controller.dart';
 
 class GoalFormPage extends GetView<GoalController> {
@@ -23,6 +24,7 @@ class GoalFormPage extends GetView<GoalController> {
   Widget build(BuildContext context) {
     final existing = Get.arguments as GoalEntity?;
     final isEdit = existing != null;
+    final symbol = Get.find<CurrencyService>().currencySymbol;
 
     return Scaffold(
       appBar: AppBar(title: Text(isEdit ? 'Edit Goal' : 'New Goal')),
@@ -40,9 +42,9 @@ class GoalFormPage extends GetView<GoalController> {
               controller: controller.targetCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Target Amount',
-                prefixIcon: Icon(Icons.flag_outlined),
+                prefixText: '$symbol ',
               ),
             ),
             const SizedBox(height: 20),

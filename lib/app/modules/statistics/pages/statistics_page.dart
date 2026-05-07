@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/extensions/context_extensions.dart';
@@ -234,10 +235,8 @@ class _SummaryCards extends StatelessWidget {
   }
 
   String _fmt(double v) {
-    final abs = v.abs();
-    if (abs >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (abs >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 }
 
@@ -619,9 +618,8 @@ class _TopCategoriesList extends StatelessWidget {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 }
 

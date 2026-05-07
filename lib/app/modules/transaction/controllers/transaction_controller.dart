@@ -205,7 +205,9 @@ class TransactionController extends GetxController {
     _loadWallets();
     _loadCategories();
     if (existing != null) {
-      amountCtrl.text = existing.amount.toStringAsFixed(0);
+      amountCtrl.text = existing.amount % 1 == 0
+          ? existing.amount.toStringAsFixed(0)
+          : existing.amount.toStringAsFixed(2);
       noteCtrl.text = existing.note ?? '';
       selectedTab.value = existing.type.index;
       selectedWalletId.value = existing.walletId;

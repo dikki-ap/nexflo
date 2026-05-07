@@ -86,7 +86,6 @@ class RecurringFormPage extends GetView<RecurringController> {
               decoration: InputDecoration(
                 labelText: 'Amount',
                 prefixText: '$sym ',
-                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -136,9 +137,8 @@ class BudgetDetailPage extends GetView<BudgetController> {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 }
 
@@ -266,9 +266,8 @@ class _BudgetHeader extends StatelessWidget {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 }
 
@@ -343,9 +342,8 @@ class _TxTile extends StatelessWidget {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 
   String _dateLabel(DateTime d) {

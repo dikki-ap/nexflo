@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
@@ -283,7 +284,6 @@ class GoalDetailPage extends GetView<GoalController> {
                 prefixText:
                     '${Get.find<CurrencyService>().currencySymbol} ',
                 border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 16),
@@ -325,9 +325,8 @@ class GoalDetailPage extends GetView<GoalController> {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 
   String _fmtDate(DateTime d) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/debt_type.dart';
@@ -264,7 +265,6 @@ class DebtDetailPage extends GetView<DebtController> {
                 labelText: 'Amount (max ${_fmt(debt.remaining)})',
                 prefixText: '$sym ',
                 border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 12),
@@ -321,9 +321,8 @@ class DebtDetailPage extends GetView<DebtController> {
       };
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 
   String _fmtDate(DateTime d) =>
@@ -369,9 +368,8 @@ class _PaymentTile extends StatelessWidget {
   }
 
   String _fmt(double v) {
-    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-    return v.toStringAsFixed(0);
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 
   String _fmtDate(DateTime d) =>

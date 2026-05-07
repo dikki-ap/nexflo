@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/color_helper.dart';
@@ -203,11 +204,10 @@ class _CategoryDetailPageState extends State<CategoryDetailPage> {
     );
   }
 
-  String _fmt(double v) => v >= 1000000
-      ? '${(v / 1000000).toStringAsFixed(1)}M'
-      : v >= 1000
-          ? '${(v / 1000).toStringAsFixed(1)}K'
-          : v.toStringAsFixed(0);
+  String _fmt(double v) {
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
+  }
 
   String _fmtDate(DateTime d) {
     const m = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -292,9 +292,8 @@ class _SubcatRow extends StatelessWidget {
     );
   }
 
-  String _fmt(double v) => v >= 1000000
-      ? '${(v / 1000000).toStringAsFixed(1)}M'
-      : v >= 1000
-          ? '${(v / 1000).toStringAsFixed(1)}K'
-          : v.toStringAsFixed(0);
+  String _fmt(double v) {
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
+  }
 }
