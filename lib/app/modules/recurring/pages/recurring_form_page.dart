@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/transaction_type.dart';
-import '../../../core/enums/recurrence_type.dart';
 import '../../../domain/entities/recurring_transaction_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/recurring_controller.dart';
 
 class RecurringFormPage extends GetView<RecurringController> {
   const RecurringFormPage({super.key});
 
-  static const _intervals = [1, 2, 3, 6, 12];
-
   @override
   Widget build(BuildContext context) {
     final existing = Get.arguments as RecurringTransactionEntity?;
     final isEdit = existing != null;
+    final sym = Get.find<CurrencyService>().currencySymbol;
 
     return Scaffold(
       appBar: AppBar(
@@ -80,9 +80,13 @@ class RecurringFormPage extends GetView<RecurringController> {
               controller: controller.amountCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
                 labelText: 'Amount',
-                prefixIcon: Icon(Icons.attach_money),
+                prefixText: '$sym ',
+                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 16),
@@ -153,40 +157,62 @@ class RecurringFormPage extends GetView<RecurringController> {
                 ],
               );
             }),
-            // Recurrence
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Obx(() => DropdownButtonFormField<int>(
-                        value: controller.selectedInterval.value,
-                        items: _intervals
-                            .map((i) => DropdownMenuItem(
-                                value: i, child: Text('Every $i')))
-                            .toList(),
-                        onChanged: (v) =>
-                            controller.selectedInterval.value = v!,
-                        decoration:
-                            const InputDecoration(labelText: 'Interval'),
-                      )),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 3,
-                  child: Obx(() => DropdownButtonFormField<RecurrenceType>(
-                        value: controller.selectedRecurrenceType.value,
-                        items: RecurrenceType.values
-                            .map((r) => DropdownMenuItem(
-                                value: r, child: Text(r.label)))
-                            .toList(),
-                        onChanged: (v) =>
-                            controller.selectedRecurrenceType.value = v!,
-                        decoration:
-                            const InputDecoration(labelText: 'Frequency'),
-                      )),
-                ),
-              ],
+            // Recurrence preset chips
+            const Text(
+              'FREQUENCY',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+              ),
             ),
+            const SizedBox(height: 10),
+            Obx(() => Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(
+                    RecurringController.presets.length,
+                    (i) {
+                      final preset = RecurringController.presets[i];
+                      final selected =
+                          controller.selectedPresetIndex.value == i;
+                      return ChoiceChip(
+                        label: Text(preset.label),
+                        selected: selected,
+                        onSelected: (_) => controller.selectPreset(i),
+                        selectedColor:
+                            Theme.of(context).colorScheme.primary,
+                        labelStyle: TextStyle(
+                          color: selected ? Colors.white : null,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      );
+                    },
+                  ),
+                )),
+            const SizedBox(height: 16),
+            // Charge time picker
+            Obx(() {
+              final h = controller.chargeHour.value
+                  .toString()
+                  .padLeft(2, '0');
+              final m = controller.chargeMinute.value
+                  .toString()
+                  .padLeft(2, '0');
+              return InkWell(
+                onTap: () => _pickChargeTime(context),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Charge Time',
+                    prefixIcon: Icon(Icons.access_time),
+                    suffixIcon: Icon(Icons.edit_outlined, size: 18),
+                  ),
+                  child: Text('$h:$m'),
+                ),
+              );
+            }),
             const SizedBox(height: 16),
             // Start Date
             Obx(() => InkWell(
@@ -196,8 +222,7 @@ class RecurringFormPage extends GetView<RecurringController> {
                       labelText: 'Start Date',
                       suffixIcon: Icon(Icons.calendar_today),
                     ),
-                    child:
-                        Text(_fmtDate(controller.startDate.value)),
+                    child: Text(_fmtDate(controller.startDate.value)),
                   ),
                 )),
             const SizedBox(height: 16),
@@ -245,6 +270,20 @@ class RecurringFormPage extends GetView<RecurringController> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickChargeTime(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: controller.chargeHour.value,
+        minute: controller.chargeMinute.value,
+      ),
+    );
+    if (picked != null) {
+      controller.chargeHour.value = picked.hour;
+      controller.chargeMinute.value = picked.minute;
+    }
   }
 
   Future<void> _pickDate(BuildContext context, {required bool isStart}) async {

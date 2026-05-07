@@ -20,7 +20,23 @@ import '../../../domain/usecases/wallet/get_all_wallets_usecase.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../services/auth_service.dart';
 
+class RecurringPreset {
+  final String label;
+  final RecurrenceType type;
+  final int interval;
+  const RecurringPreset(this.label, this.type, this.interval);
+}
+
 class RecurringController extends GetxController {
+  static const presets = [
+    RecurringPreset('Daily', RecurrenceType.daily, 1),
+    RecurringPreset('Weekly', RecurrenceType.weekly, 1),
+    RecurringPreset('Every 2 Weeks', RecurrenceType.weekly, 2),
+    RecurringPreset('Monthly', RecurrenceType.monthly, 1),
+    RecurringPreset('Quarterly', RecurrenceType.monthly, 3),
+    RecurringPreset('Yearly', RecurrenceType.yearly, 1),
+  ];
+
   final recurringList = <RecurringTransactionEntity>[].obs;
   final wallets = <WalletEntity>[].obs;
   final categories = <CategoryEntity>[].obs;
@@ -33,10 +49,24 @@ class RecurringController extends GetxController {
   final selectedWalletId = Rxn<String>();
   final selectedToWalletId = Rxn<String>();
   final selectedCategoryId = Rxn<String>();
-  final selectedRecurrenceType = RecurrenceType.monthly.obs;
-  final selectedInterval = 1.obs;
+  final selectedPresetIndex = 3.obs; // default: Monthly
   final startDate = DateTime.now().obs;
   final endDate = Rxn<DateTime>();
+  final chargeHour = 9.obs;
+  final chargeMinute = 0.obs;
+
+  RecurrenceType get selectedRecurrenceType =>
+      presets[selectedPresetIndex.value].type;
+  int get selectedInterval => presets[selectedPresetIndex.value].interval;
+
+  void selectPreset(int index) => selectedPresetIndex.value = index;
+
+  int _presetIndexFor(RecurrenceType type, int interval) {
+    for (var i = 0; i < presets.length; i++) {
+      if (presets[i].type == type && presets[i].interval == interval) return i;
+    }
+    return 3; // fallback: Monthly
+  }
 
   late final GetRecurringUseCase _getAll;
   late final CreateRecurringUseCase _create;
@@ -102,20 +132,23 @@ class RecurringController extends GetxController {
       selectedWalletId.value = existing.walletId;
       selectedToWalletId.value = existing.toWalletId;
       selectedCategoryId.value = existing.categoryId;
-      selectedRecurrenceType.value = existing.recurrenceType;
-      selectedInterval.value = existing.recurrenceInterval;
+      selectedPresetIndex.value =
+          _presetIndexFor(existing.recurrenceType, existing.recurrenceInterval);
       startDate.value = existing.startDate;
       endDate.value = existing.endDate;
+      chargeHour.value = existing.startDate.hour;
+      chargeMinute.value = existing.startDate.minute;
     } else {
       amountCtrl.clear();
       noteCtrl.clear();
       selectedType.value = TransactionType.expense;
       selectedToWalletId.value = null;
       selectedCategoryId.value = null;
-      selectedRecurrenceType.value = RecurrenceType.monthly;
-      selectedInterval.value = 1;
+      selectedPresetIndex.value = 3; // Monthly
       startDate.value = DateTime.now();
       endDate.value = null;
+      chargeHour.value = 9;
+      chargeMinute.value = 0;
       if (wallets.isNotEmpty) selectedWalletId.value = wallets.first.id;
     }
   }
@@ -131,6 +164,14 @@ class RecurringController extends GetxController {
       return;
     }
 
+    final effectiveStart = DateTime(
+      startDate.value.year,
+      startDate.value.month,
+      startDate.value.day,
+      chargeHour.value,
+      chargeMinute.value,
+    );
+
     isLoading.value = true;
     if (existing == null) {
       final r = await _create(CreateRecurringParams(
@@ -143,15 +184,15 @@ class RecurringController extends GetxController {
         type: selectedType.value.value,
         amount: amount,
         note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-        recurrenceType: selectedRecurrenceType.value.value,
-        recurrenceInterval: selectedInterval.value,
-        startDate: startDate.value,
+        recurrenceType: selectedRecurrenceType.value,
+        recurrenceInterval: selectedInterval,
+        startDate: effectiveStart,
         endDate: endDate.value,
       ));
-      r.fold((f) => Get.snackbar('Error', f.message), (_) {
-        Get.back();
-        _loadAll();
-      });
+      r.fold(
+        (f) => Get.snackbar('Error', f.message),
+        (_) { Get.back(); _loadAll(); },
+      );
     } else {
       final updated = _RecurringCopy(
         id: existing.id,
@@ -164,9 +205,9 @@ class RecurringController extends GetxController {
         type: selectedType.value,
         amount: amount,
         note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-        recurrenceType: selectedRecurrenceType.value,
-        recurrenceInterval: selectedInterval.value,
-        startDate: startDate.value,
+        recurrenceType: selectedRecurrenceType,
+        recurrenceInterval: selectedInterval,
+        startDate: effectiveStart,
         endDate: endDate.value,
         nextDueDate: existing.nextDueDate,
         lastProcessedDate: existing.lastProcessedDate,
