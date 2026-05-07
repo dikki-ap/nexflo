@@ -37,6 +37,37 @@ class _BaseCurrencySection extends StatelessWidget {
   final SettingsController ctrl;
   const _BaseCurrencySection(this.ctrl);
 
+  void _confirmCurrencyChange(
+      BuildContext context, SettingsController ctrl, String newCode) {
+    final currentCode = ctrl.settings.value?.baseCurrencyCode ?? 'USD';
+    if (newCode == currentCode) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Change Base Currency'),
+        content: Text(
+          'Switching to $newCode will affect how amounts are displayed. '
+          'Existing transactions will NOT be converted — their amounts '
+          'remain unchanged. Only new transactions will use $newCode.\n\n'
+          'Are you sure you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Get.back();
+              ctrl.updateBaseCurrency(newCode);
+            },
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -65,7 +96,7 @@ class _BaseCurrencySection extends StatelessWidget {
                     ? Icon(Icons.check_circle,
                         color: Theme.of(context).colorScheme.primary)
                     : null,
-                onTap: () => ctrl.updateBaseCurrency(currency.code),
+                onTap: () => _confirmCurrencyChange(context, ctrl, currency.code),
                 selected: isSelected,
               );
             }).toList(),
