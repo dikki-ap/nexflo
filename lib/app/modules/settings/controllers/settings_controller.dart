@@ -59,6 +59,10 @@ class SettingsController extends GetxController {
     isLoading.value = true;
     try {
       settings.value = await _settingsDs.getByUserId(userId!);
+      final color = settings.value?.themeColor;
+      if (color != null) {
+        Get.find<AppThemeController>().setThemeColor(color);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -97,6 +101,7 @@ class SettingsController extends GetxController {
     final updated = settings.value!.copyWith(themeColor: color);
     await _settingsDs.update(updated);
     settings.value = updated;
+    Get.find<AppThemeController>().setThemeColor(color);
   }
 
   Future<void> toggleSyncEnabled(bool value) async {

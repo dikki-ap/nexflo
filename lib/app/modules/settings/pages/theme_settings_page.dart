@@ -56,7 +56,10 @@ class ThemeSettingsPage extends GetView<SettingsController> {
                           label: _colorLabel(color),
                           color: color.color,
                           isSelected: tc.themeColorEnum == color,
-                          onTap: () => tc.setThemeColor(color),
+                          onTap: () {
+                            tc.setThemeColor(color);
+                            controller.updateThemeColor(color);
+                          },
                         )),
                 ListTile(
                   leading: Container(
@@ -130,6 +133,7 @@ class ThemeSettingsPage extends GetView<SettingsController> {
               final hex =
                   '#${picked.red.toRadixString(16).padLeft(2, '0')}${picked.green.toRadixString(16).padLeft(2, '0')}${picked.blue.toRadixString(16).padLeft(2, '0')}';
               themeCtrl.setThemeColor(ThemeColor.custom, customHex: hex);
+              controller.updateThemeColor(ThemeColor.custom);
               Get.back();
             },
             child: const Text('Apply'),
