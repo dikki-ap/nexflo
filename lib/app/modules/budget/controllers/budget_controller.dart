@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/enums/budget_period.dart';
+import '../../../core/enums/filter_period.dart';
 import '../../../data/datasources/local/budget_local_ds.dart';
 import '../../../data/datasources/local/category_local_ds.dart';
+import '../../../data/datasources/local/transaction_local_ds.dart';
 import '../../../data/datasources/local/wallet_local_ds.dart';
 import '../../../data/repositories/budget_repository_impl.dart';
 import '../../../data/repositories/category_repository_impl.dart';
@@ -10,6 +12,7 @@ import '../../../data/repositories/wallet_repository_impl.dart';
 import '../../../data/database/app_database.dart';
 import '../../../domain/entities/budget_entity.dart';
 import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../../../domain/entities/wallet_entity.dart';
 import '../../../domain/usecases/budget/get_all_budgets_usecase.dart';
 import '../../../domain/usecases/budget/create_budget_usecase.dart';
@@ -30,8 +33,8 @@ class BudgetController extends GetxController {
   final nameCtrl = TextEditingController();
   final amountCtrl = TextEditingController();
   final selectedPeriod = BudgetPeriod.monthly.obs;
-  final selectedCategoryId = Rxn<String>();
-  final selectedWalletId = Rxn<String>();
+  final selectedCategoryIds = <String>[].obs;
+  final selectedWalletIds = <String>[].obs;
   final isAllCategories = true.obs;
   final rollover = false.obs;
   final alertAtPercent = 80.obs;
@@ -43,6 +46,10 @@ class BudgetController extends GetxController {
   late final GetCategoriesUseCase _getCategories;
   late final GetAllWalletsUseCase _getWallets;
   late final BudgetLocalDataSource _budgetDs;
+  late final TransactionLocalDataSource _txDs;
+
+  // Detail page state
+  final detailTransactions = <TransactionEntity>[].obs;
 
   String get _userId => Get.find<AuthService>().currentUser!.id;
 
@@ -62,6 +69,7 @@ class BudgetController extends GetxController {
     super.onInit();
     final db = Get.find<AppDatabase>();
     _budgetDs = BudgetLocalDataSource(db);
+    _txDs = TransactionLocalDataSource(db);
     _getAll = GetAllBudgetsUseCase(BudgetRepositoryImpl(_budgetDs));
     _create = CreateBudgetUseCase(BudgetRepositoryImpl(_budgetDs));
     _update = UpdateBudgetUseCase(BudgetRepositoryImpl(_budgetDs));
@@ -122,8 +130,8 @@ class BudgetController extends GetxController {
       nameCtrl.text = existing.name;
       amountCtrl.text = existing.amount.toStringAsFixed(0);
       selectedPeriod.value = existing.period;
-      selectedCategoryId.value = existing.categoryId;
-      selectedWalletId.value = existing.walletId;
+      selectedCategoryIds.value = existing.categoryIds;
+      selectedWalletIds.value = existing.walletIds;
       isAllCategories.value = existing.isAllCategories;
       rollover.value = existing.rollover;
       alertAtPercent.value = existing.alertAtPercent;
@@ -131,8 +139,8 @@ class BudgetController extends GetxController {
       nameCtrl.clear();
       amountCtrl.clear();
       selectedPeriod.value = BudgetPeriod.monthly;
-      selectedCategoryId.value = null;
-      selectedWalletId.value = null;
+      selectedCategoryIds.clear();
+      selectedWalletIds.clear();
       isAllCategories.value = true;
       rollover.value = false;
       alertAtPercent.value = 80;
@@ -147,6 +155,9 @@ class BudgetController extends GetxController {
       return;
     }
 
+    final catIds = isAllCategories.value ? <String>[] : List<String>.from(selectedCategoryIds);
+    final walIds = List<String>.from(selectedWalletIds);
+
     isLoading.value = true;
     if (existing == null) {
       final result = await _create(CreateBudgetParams(
@@ -154,8 +165,8 @@ class BudgetController extends GetxController {
         name: name,
         amount: amount,
         period: selectedPeriod.value.value,
-        categoryId: isAllCategories.value ? null : selectedCategoryId.value,
-        walletId: selectedWalletId.value,
+        categoryIds: catIds,
+        walletIds: walIds,
         isAllCategories: isAllCategories.value,
         rollover: rollover.value,
         alertAtPercent: alertAtPercent.value,
@@ -171,8 +182,8 @@ class BudgetController extends GetxController {
         name: name,
         amount: amount,
         period: selectedPeriod.value,
-        categoryId: isAllCategories.value ? null : selectedCategoryId.value,
-        walletId: selectedWalletId.value,
+        categoryId: catIds.isEmpty ? null : catIds.join(','),
+        walletId: walIds.isEmpty ? null : walIds.join(','),
         isAllCategories: isAllCategories.value,
         rollover: rollover.value,
         alertAtPercent: alertAtPercent.value,
@@ -187,6 +198,46 @@ class BudgetController extends GetxController {
       });
     }
     isLoading.value = false;
+  }
+
+  CategoryEntity? categoryById(String? id) =>
+      id == null ? null : categories.firstWhereOrNull((c) => c.id == id);
+
+  WalletEntity? walletById(String? id) =>
+      id == null ? null : wallets.firstWhereOrNull((w) => w.id == id);
+
+  Future<void> loadDetailTransactions(BudgetEntity budget) async {
+    final uid = Get.find<AuthService>().currentUser?.id;
+    if (uid == null) return;
+    final (start, end) = _budgetPeriodRange(budget.period);
+    final all = await _txDs.getByFilter(
+      userId: uid,
+      period: FilterPeriod.custom,
+      customStart: start,
+      customEnd: end,
+    );
+    final walIds = budget.walletIds;
+    final catIds = budget.categoryIds;
+    detailTransactions.value = all.where((t) {
+      final matchWallet = walIds.isEmpty || walIds.contains(t.walletId);
+      final matchCat = budget.isAllCategories ||
+          catIds.isEmpty ||
+          catIds.contains(t.categoryId);
+      return matchWallet && matchCat && t.type.value == 'expense';
+    }).toList();
+  }
+
+  (DateTime, DateTime) _budgetPeriodRange(BudgetPeriod period) {
+    final now = DateTime.now();
+    switch (period) {
+      case BudgetPeriod.monthly:
+        return (DateTime(now.year, now.month, 1), DateTime(now.year, now.month + 1, 1));
+      case BudgetPeriod.weekly:
+        final start = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+        return (start, start.add(const Duration(days: 7)));
+      case BudgetPeriod.yearly:
+        return (DateTime(now.year, 1, 1), DateTime(now.year + 1, 1, 1));
+    }
   }
 
   Future<void> deleteBudget(String id) async {
