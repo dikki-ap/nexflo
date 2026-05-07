@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/enums/debt_type.dart';
-import '../../../data/datasources/local/debt_local_ds.dart';
-import '../../../data/repositories/debt_repository_impl.dart';
 import '../../../data/database/app_database.dart';
+import '../../../data/datasources/local/debt_local_ds.dart';
+import '../../../data/datasources/local/transaction_local_ds.dart';
+import '../../../data/datasources/local/wallet_local_ds.dart';
+import '../../../data/repositories/debt_repository_impl.dart';
+import '../../../data/repositories/transaction_repository_impl.dart';
+import '../../../data/repositories/wallet_repository_impl.dart';
 import '../../../domain/entities/debt_entity.dart';
 import '../../../domain/entities/debt_payment_entity.dart';
+import '../../../domain/entities/wallet_entity.dart';
 import '../../../domain/usecases/debt/get_all_debts_usecase.dart';
 import '../../../domain/usecases/debt/create_debt_usecase.dart';
 import '../../../domain/usecases/debt/update_debt_usecase.dart';
 import '../../../domain/usecases/debt/delete_debt_usecase.dart';
 import '../../../domain/usecases/debt/add_debt_payment_usecase.dart';
 import '../../../domain/usecases/debt/get_debt_payments_usecase.dart';
+import '../../../domain/usecases/transaction/create_transaction_usecase.dart';
+import '../../../domain/usecases/wallet/get_all_wallets_usecase.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/currency_service.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
@@ -20,6 +27,8 @@ class DebtController extends GetxController {
   final debts = <DebtEntity>[].obs;
   final payments = <DebtPaymentEntity>[].obs;
   final isLoading = false.obs;
+  final wallets = <WalletEntity>[].obs;
+  final selectedPaymentWalletId = Rxn<String>();
 
   // Form state
   final selectedType = DebtType.iOwe.obs;
@@ -36,6 +45,8 @@ class DebtController extends GetxController {
   late final DeleteDebtUseCase _delete;
   late final AddDebtPaymentUseCase _addPayment;
   late final GetDebtPaymentsUseCase _getPayments;
+  late final GetAllWalletsUseCase _getWallets;
+  late final CreateTransactionUseCase _createTx;
 
   String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
@@ -49,6 +60,12 @@ class DebtController extends GetxController {
   double get totalOwedToMe =>
       owedToMeList.fold(0.0, (s, d) => s + d.remaining);
 
+  WalletEntity? get selectedPaymentWallet =>
+      selectedPaymentWalletId.value == null
+          ? null
+          : wallets.firstWhereOrNull(
+              (w) => w.id == selectedPaymentWalletId.value);
+
   @override
   void onInit() {
     super.onInit();
@@ -61,7 +78,16 @@ class DebtController extends GetxController {
     _delete = DeleteDebtUseCase(repo);
     _addPayment = AddDebtPaymentUseCase(repo);
     _getPayments = GetDebtPaymentsUseCase(repo);
+
+    final walletDs = WalletLocalDataSource(db);
+    _getWallets = GetAllWalletsUseCase(WalletRepositoryImpl(walletDs));
+
+    final txDs = TransactionLocalDataSource(db);
+    final txRepo = TransactionRepositoryImpl(txDs, walletDs);
+    _createTx = CreateTransactionUseCase(txRepo);
+
     loadDebts();
+    loadWallets();
   }
 
   @override
@@ -82,6 +108,11 @@ class DebtController extends GetxController {
       (list) => debts.value = list,
     );
     isLoading.value = false;
+  }
+
+  Future<void> loadWallets() async {
+    final result = await _getWallets(GetAllWalletsParams(_userId));
+    result.fold((_) {}, (list) => wallets.value = list);
   }
 
   Future<void> loadPayments(String debtId) async {
@@ -167,6 +198,45 @@ class DebtController extends GetxController {
       Get.snackbar('Error', 'Enter a valid amount');
       return;
     }
+    if (selectedPaymentWalletId.value == null) {
+      Get.snackbar('Error', 'Please select a wallet');
+      return;
+    }
+    final wallet = selectedPaymentWallet;
+    if (wallet == null) {
+      Get.snackbar('Error', 'Selected wallet not found');
+      return;
+    }
+
+    // For "I Owe" debts: paying out → expense. Check balance.
+    // For "Owed to Me": receiving money → income. No balance check.
+    final isExpense = debt.type == DebtType.iOwe;
+    if (isExpense && amount > wallet.balance) {
+      Get.snackbar(
+        'Insufficient Balance',
+        '${wallet.name} only has ${wallet.balance.toStringAsFixed(0)} available',
+      );
+      return;
+    }
+
+    final note = paymentNoteCtrl.text.trim().isEmpty
+        ? 'Debt: ${debt.personName}'
+        : paymentNoteCtrl.text.trim();
+
+    final txResult = await _createTx(CreateTransactionParams(
+      userId: _userId,
+      walletId: wallet.id,
+      type: isExpense ? 'expense' : 'income',
+      amount: amount,
+      date: DateTime.now(),
+      note: note,
+    ));
+
+    if (txResult.isLeft()) {
+      txResult.fold((f) => Get.snackbar('Error', f.message), (_) {});
+      return;
+    }
+
     final result = await _addPayment(AddPaymentParams(
       debtId: debt.id,
       amount: amount,
@@ -178,8 +248,10 @@ class DebtController extends GetxController {
     result.fold((f) => Get.snackbar('Error', f.message), (_) {
       paymentAmountCtrl.clear();
       paymentNoteCtrl.clear();
+      selectedPaymentWalletId.value = null;
       Get.back();
       loadDebts();
+      loadWallets();
       loadPayments(debt.id);
       _notifyDashboard();
     });

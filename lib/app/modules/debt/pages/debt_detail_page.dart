@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
@@ -185,6 +186,8 @@ class DebtDetailPage extends GetView<DebtController> {
   void _showPaymentSheet(BuildContext context, DebtEntity debt) {
     controller.paymentAmountCtrl.clear();
     controller.paymentNoteCtrl.clear();
+    controller.selectedPaymentWalletId.value = null;
+    final sym = Get.find<CurrencyService>().currencySymbol;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -196,24 +199,81 @@ class DebtDetailPage extends GetView<DebtController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Record Payment',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 16),
+            // Wallet selector
+            Obx(() {
+              final wallets = controller.wallets;
+              if (wallets.isEmpty) {
+                return const Text('No wallets available',
+                    style: TextStyle(color: Colors.grey));
+              }
+              return DropdownButtonFormField<String>(
+                value: controller.selectedPaymentWalletId.value,
+                decoration: InputDecoration(
+                  labelText: debt.type == DebtType.iOwe
+                      ? 'Pay from wallet'
+                      : 'Receive to wallet',
+                  border: const OutlineInputBorder(),
+                  prefixIcon:
+                      const Icon(Icons.account_balance_wallet_outlined),
+                ),
+                items: wallets.map((w) {
+                  return DropdownMenuItem(
+                    value: w.id,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(w.name),
+                        Text(
+                          '$sym ${_fmt(w.balance)}',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (v) =>
+                    controller.selectedPaymentWalletId.value = v,
+              );
+            }),
+            // Available balance hint
+            Obx(() {
+              final wallet = controller.selectedPaymentWallet;
+              if (wallet == null) return const SizedBox(height: 12);
+              return Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 4),
+                child: Text(
+                  'Available: $sym ${_fmt(wallet.balance)}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              );
+            }),
             const SizedBox(height: 12),
             TextField(
               controller: controller.paymentAmountCtrl,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true),
+              autofocus: false,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: InputDecoration(
                 labelText: 'Amount (max ${_fmt(debt.remaining)})',
+                prefixText: '$sym ',
+                border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: controller.paymentNoteCtrl,
-              decoration:
-                  const InputDecoration(labelText: 'Note (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Note (optional)',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             SizedBox(
