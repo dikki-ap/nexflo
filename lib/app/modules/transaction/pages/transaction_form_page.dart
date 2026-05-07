@@ -171,6 +171,15 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                           if (controller.selectedTab.value != 2) {
                             return const SizedBox.shrink();
                           }
+                          final availableTo = controller.wallets
+                              .where((w) =>
+                                  w.id != controller.selectedWalletId.value)
+                              .toList();
+                          final currentToId = availableTo.any((w) =>
+                                  w.id ==
+                                  controller.selectedToWalletId.value)
+                              ? controller.selectedToWalletId.value
+                              : null;
                           return Column(
                             children: [
                               Divider(
@@ -181,11 +190,8 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                               ),
                               DropdownButtonFormField<String>(
                                 isExpanded: true,
-                                value: controller.selectedToWalletId.value,
-                                items: controller.wallets
-                                    .where((w) =>
-                                        w.id !=
-                                        controller.selectedWalletId.value)
+                                value: currentToId,
+                                items: availableTo
                                     .map((w) => DropdownMenuItem(
                                         value: w.id,
                                         child: Text(w.name)))

@@ -4,15 +4,33 @@ import '../../../core/enums/budget_period.dart';
 import '../../../domain/entities/budget_entity.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/wallet_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/budget_controller.dart';
 
-class BudgetFormPage extends GetView<BudgetController> {
+class BudgetFormPage extends StatefulWidget {
   const BudgetFormPage({super.key});
 
   @override
+  State<BudgetFormPage> createState() => _BudgetFormPageState();
+}
+
+class _BudgetFormPageState extends State<BudgetFormPage> {
+  late final BudgetController controller;
+  late final BudgetEntity? existing;
+  late final bool isEdit;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<BudgetController>();
+    existing = Get.arguments as BudgetEntity?;
+    isEdit = existing != null;
+    controller.initForm(existing);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final existing = Get.arguments as BudgetEntity?;
-    final isEdit = existing != null;
+    final symbol = Get.find<CurrencyService>().currencySymbol;
 
     return Scaffold(
       appBar: AppBar(title: Text(isEdit ? 'Edit Budget' : 'New Budget')),
@@ -30,9 +48,9 @@ class BudgetFormPage extends GetView<BudgetController> {
               controller: controller.amountCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Limit Amount',
-                prefixIcon: Icon(Icons.attach_money),
+                prefixText: symbol,
               ),
             ),
             const SizedBox(height: 16),
@@ -53,10 +71,15 @@ class BudgetFormPage extends GetView<BudgetController> {
                   value: controller.isAllCategories.value,
                   onChanged: (v) => controller.isAllCategories.value = v,
                 )),
+            // Categories multi-select — outer Obx tracks both isAllCategories
+            // and selectedCategoryIds (via .length) to rebuild chips on change.
             Obx(() {
               if (controller.isAllCategories.value) {
                 return const SizedBox.shrink();
               }
+              // Reading .length registers selectedCategoryIds as a dependency
+              // so the outer Obx rebuilds when items are added/removed.
+              final _ = controller.selectedCategoryIds.length;
               return _MultiSelectField(
                 label: 'Categories',
                 hint: 'Tap to select categories',
@@ -77,22 +100,27 @@ class BudgetFormPage extends GetView<BudgetController> {
               );
             }),
             const SizedBox(height: 12),
-            Obx(() => _MultiSelectField(
-                  label: 'Wallets',
-                  hint: 'All wallets (tap to restrict)',
-                  selectedIds: controller.selectedWalletIds,
+            // Wallets multi-select — outer Obx tracks wallets list and
+            // selectedWalletIds (via .length) to rebuild chips on change.
+            Obx(() {
+              final _ = controller.selectedWalletIds.length;
+              return _MultiSelectField(
+                label: 'Wallets',
+                hint: 'All wallets (tap to restrict)',
+                selectedIds: controller.selectedWalletIds,
+                items: controller.wallets
+                    .map((w) => _SelectItem(w.id, w.name, _walletIcon(w)))
+                    .toList(),
+                onTap: () => _showMultiSelectSheet(
+                  context,
+                  title: 'Select Wallets',
                   items: controller.wallets
                       .map((w) => _SelectItem(w.id, w.name, _walletIcon(w)))
                       .toList(),
-                  onTap: () => _showMultiSelectSheet(
-                    context,
-                    title: 'Select Wallets',
-                    items: controller.wallets
-                        .map((w) => _SelectItem(w.id, w.name, _walletIcon(w)))
-                        .toList(),
-                    selectedIds: controller.selectedWalletIds,
-                  ),
-                )),
+                  selectedIds: controller.selectedWalletIds,
+                ),
+              );
+            }),
             const SizedBox(height: 16),
             Obx(() => SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -171,6 +199,8 @@ class _SelectItem {
   const _SelectItem(this.id, this.name, this.icon);
 }
 
+// Pure StatelessWidget — no inner Obx. Parent Obx drives reactivity by
+// explicitly tracking selectedIds.length as a dependency.
 class _MultiSelectField extends StatelessWidget {
   final String label;
   final String hint;
@@ -189,39 +219,37 @@ class _MultiSelectField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Obx(() {
-      final selected = items.where((i) => selectedIds.contains(i.id)).toList();
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            suffixIcon: const Icon(Icons.expand_more_rounded),
-          ),
-          child: selected.isEmpty
-              ? Text(hint,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
-                      fontSize: 14))
-              : Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: selected
-                      .map((i) => Chip(
-                            label: Text(i.name,
-                                style: const TextStyle(fontSize: 12)),
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            deleteIcon: const Icon(Icons.close, size: 14),
-                            onDeleted: () => selectedIds.remove(i.id),
-                          ))
-                      .toList(),
-                ),
+    final selected = items.where((i) => selectedIds.contains(i.id)).toList();
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: const Icon(Icons.expand_more_rounded),
         ),
-      );
-    });
+        child: selected.isEmpty
+            ? Text(hint,
+                style: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    fontSize: 14))
+            : Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: selected
+                    .map((i) => Chip(
+                          label: Text(i.name,
+                              style: const TextStyle(fontSize: 12)),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          deleteIcon: const Icon(Icons.close, size: 14),
+                          onDeleted: () => selectedIds.remove(i.id),
+                        ))
+                    .toList(),
+              ),
+      ),
+    );
   }
 }
 
