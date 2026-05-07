@@ -8,6 +8,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/shimmer_loading.dart';
 import '../controllers/statistics_controller.dart';
+import 'category_detail_page.dart';
 
 class StatisticsPage extends GetView<StatisticsController> {
   const StatisticsPage({super.key});
@@ -549,45 +550,65 @@ class _TopCategoriesList extends StatelessWidget {
             ...cats.map((ca) {
               final color = ctrl.categoryColor(ca);
               final pct = maxAmt > 0 ? ca.amount / maxAmt : 0.0;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          ca.category?.name ?? 'Uncategorized',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white : AppColors.grey900,
+              return GestureDetector(
+                onTap: () => Get.to(
+                  () => const CategoryDetailPage(),
+                  arguments: ca,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              ca.category?.name ?? 'Uncategorized',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white : AppColors.grey900,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        Text(
-                          _fmt(ca.amount),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: color,
+                          Row(
+                            children: [
+                              Text(
+                                _fmt(ca.amount),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: color,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.chevron_right_rounded,
+                                  size: 16,
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.3)
+                                      : AppColors.grey400),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: pct.toDouble(),
-                        minHeight: 6,
-                        backgroundColor: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : AppColors.grey200,
-                        valueColor: AlwaysStoppedAnimation(color),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: pct.toDouble(),
+                          minHeight: 6,
+                          backgroundColor: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : AppColors.grey200,
+                          valueColor: AlwaysStoppedAnimation(color),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),

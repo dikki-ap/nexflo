@@ -8,16 +8,31 @@ import '../../../data/database/app_database.dart';
 import '../../../data/datasources/local/statistics_local_ds.dart';
 import '../../../data/datasources/local/transaction_local_ds.dart';
 import '../../../data/datasources/local/category_local_ds.dart';
+import '../../../data/datasources/local/subcategory_local_ds.dart';
 import '../../../data/repositories/category_repository_impl.dart';
+import '../../../data/repositories/subcategory_repository_impl.dart';
 import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/subcategory_entity.dart';
 import '../../../domain/entities/transaction_entity.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/subcategory/get_subcategories_usecase.dart';
 import '../../../services/auth_service.dart';
 
 class CategoryAmount {
   final CategoryEntity? category;
   final double amount;
   CategoryAmount(this.category, this.amount);
+}
+
+class SubcategoryAmount {
+  final SubcategoryEntity? subcategory;
+  final double amount;
+  final double percentage;
+  SubcategoryAmount({
+    required this.subcategory,
+    required this.amount,
+    required this.percentage,
+  });
 }
 
 class StatisticsController extends GetxController {
@@ -35,6 +50,7 @@ class StatisticsController extends GetxController {
   late final StatisticsLocalDataSource _statsDs;
   late final TransactionLocalDataSource _txDs;
   late final GetCategoriesUseCase _getCategories;
+  late final GetSubcategoriesUseCase _getSubcategories;
 
   String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
@@ -58,6 +74,8 @@ class StatisticsController extends GetxController {
     _txDs = TransactionLocalDataSource(db);
     _getCategories =
         GetCategoriesUseCase(CategoryRepositoryImpl(CategoryLocalDataSource(db)));
+    _getSubcategories =
+        GetSubcategoriesUseCase(SubcategoryRepositoryImpl(SubcategoryLocalDataSource(db)));
     loadAll();
   }
 
@@ -140,6 +158,43 @@ class StatisticsController extends GetxController {
   Color categoryColor(CategoryAmount ca) {
     if (ca.category == null) return Colors.grey;
     return ColorHelper.fromHex(ca.category!.colorHex);
+  }
+
+  Future<List<SubcategoryAmount>> getSubcategoryBreakdown(
+      String categoryId) async {
+    final (start, end) = _range;
+    final bySubcat = await _statsDs.getExpenseBySubcategory(
+      userId: _userId,
+      categoryId: categoryId,
+      start: start,
+      end: end,
+    );
+
+    final subsResult = await _getSubcategories(GetSubcategoriesParams(categoryId));
+    final subsMap = <String, SubcategoryEntity>{};
+    subsResult.fold((_) {}, (list) {
+      for (final s in list as List<SubcategoryEntity>) {
+        subsMap[s.id] = s;
+      }
+    });
+
+    final total = bySubcat.values.fold(0.0, (a, b) => a + b);
+    final result = bySubcat.entries.map((e) {
+      final sub = e.key == '__none__' ? null : subsMap[e.key];
+      return SubcategoryAmount(
+        subcategory: sub,
+        amount: e.value,
+        percentage: total > 0 ? e.value / total * 100 : 0,
+      );
+    }).toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+    return result;
+  }
+
+  List<TransactionEntity> getTransactionsByCategory(String categoryId) {
+    return allTransactions
+        .where((t) => t.categoryId == categoryId && t.type.value == 'expense')
+        .toList();
   }
 
   Future<String?> exportCsv() async {

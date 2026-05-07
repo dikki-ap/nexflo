@@ -100,6 +100,53 @@ class StatisticsLocalDataSource {
     }
   }
 
+  Future<Map<String, double>> getExpenseBySubcategory({
+    required String userId,
+    required String categoryId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    try {
+      final rows = await (_db.select(_db.transactions)
+            ..where((t) => t.userId.equals(userId))
+            ..where((t) => t.type.equals('expense'))
+            ..where((t) => t.categoryId.equals(categoryId))
+            ..where((t) => t.deletedAt.isNull())
+            ..where((t) => t.date.isBiggerOrEqualValue(start))
+            ..where((t) => t.date.isSmallerOrEqualValue(end)))
+          .get();
+
+      final map = <String, double>{};
+      for (final row in rows) {
+        final key = row.subcategoryId ?? '__none__';
+        map[key] = (map[key] ?? 0) + row.amount;
+      }
+      return map;
+    } catch (e) {
+      throw LocalDatabaseException('Failed to get expense by subcategory: $e');
+    }
+  }
+
+  Future<List<dynamic>> getTransactionsByCategory({
+    required String userId,
+    required String categoryId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    try {
+      return await (_db.select(_db.transactions)
+            ..where((t) => t.userId.equals(userId))
+            ..where((t) => t.categoryId.equals(categoryId))
+            ..where((t) => t.deletedAt.isNull())
+            ..where((t) => t.date.isBiggerOrEqualValue(start))
+            ..where((t) => t.date.isSmallerOrEqualValue(end))
+            ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+          .get();
+    } catch (e) {
+      throw LocalDatabaseException('Failed to get transactions by category: $e');
+    }
+  }
+
   Future<Map<String, double>> getSummary({
     required String userId,
     required DateTime start,
