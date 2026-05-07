@@ -185,7 +185,13 @@ class TransactionLocalDataSource {
       case FilterPeriod.allTime:
         return (DateTime(2000), now);
       case FilterPeriod.custom:
-        return (customStart ?? DateTime(2000), customEnd ?? now);
+        final start = customStart != null
+            ? DateTime(customStart.year, customStart.month, customStart.day)
+            : DateTime(2000);
+        final end = customEnd != null
+            ? DateTime(customEnd.year, customEnd.month, customEnd.day, 23, 59, 59)
+            : now;
+        return (start, end);
     }
   }
 }

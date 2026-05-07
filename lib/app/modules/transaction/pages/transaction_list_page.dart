@@ -274,7 +274,10 @@ class _TxSearchDelegate extends SearchDelegate {
   List<Widget> buildActions(BuildContext context) => [
         IconButton(
           icon: const Icon(Icons.clear_rounded),
-          onPressed: () => query = '',
+          onPressed: () {
+            query = '';
+            ctrl.setSearch('');
+          },
         ),
       ];
 
