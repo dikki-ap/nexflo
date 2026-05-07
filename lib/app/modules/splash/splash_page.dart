@@ -96,7 +96,7 @@ class _SplashBodyState extends State<_SplashBody>
                 height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.tealMid.withValues(alpha: 0.12),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                 ),
               ),
             ),
@@ -114,7 +114,7 @@ class _SplashBodyState extends State<_SplashBody>
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.tealDeep.withValues(alpha: 0.15),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -141,11 +141,11 @@ class _SplashBodyState extends State<_SplashBody>
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      gradient: AppColors.tealGradient,
+                      gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.tealMid.withValues(
+                          color: Theme.of(context).colorScheme.primary.withValues(
                               alpha: 0.3 + (_pulse.value - 0.85) * 0.7),
                           blurRadius: 32 + (_pulse.value - 0.85) * 20,
                           spreadRadius: 0,
@@ -175,7 +175,7 @@ class _SplashBodyState extends State<_SplashBody>
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) =>
-                          AppColors.tealGradient.createShader(bounds),
+                          AppColors.primaryGradient(Theme.of(context).colorScheme.primary).createShader(bounds),
                       child: const Text(
                         appName,
                         style: TextStyle(

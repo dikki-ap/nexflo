@@ -366,12 +366,13 @@ class _SettingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     final labelColor = isDestructive
         ? AppColors.expense
         : (isDark ? Colors.white : AppColors.grey900);
     final iconColor = isDestructive
         ? AppColors.expense
-        : AppColors.tealMid;
+        : primary;
 
     return Column(
       children: [
@@ -391,7 +392,7 @@ class _SettingTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isDestructive
                         ? AppColors.expense.withValues(alpha: 0.10)
-                        : AppColors.tealGlowSoft,
+                        : primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 18, color: iconColor),
@@ -471,10 +472,10 @@ class _SwitchTile extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: AppColors.tealGlowSoft,
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: AppColors.tealMid),
+                child: Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -490,7 +491,7 @@ class _SwitchTile extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: AppColors.tealMid,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
             ],
           ),

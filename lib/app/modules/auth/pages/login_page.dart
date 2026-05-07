@@ -82,7 +82,7 @@ class _LoginBodyState extends State<_LoginBody> with TickerProviderStateMixin {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.tealMid.withValues(alpha: 0.10),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                 ),
               ),
             ),
@@ -100,7 +100,7 @@ class _LoginBodyState extends State<_LoginBody> with TickerProviderStateMixin {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.tealDeep.withValues(alpha: 0.12),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                 ),
               ),
             ),
@@ -128,11 +128,11 @@ class _LoginBodyState extends State<_LoginBody> with TickerProviderStateMixin {
                       width: 92,
                       height: 92,
                       decoration: BoxDecoration(
-                        gradient: AppColors.tealGradient,
+                        gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.tealMid.withValues(
+                            color: Theme.of(context).colorScheme.primary.withValues(
                                 alpha: 0.2 + (_pulse.value - 0.8) * 0.5),
                             blurRadius: 28 + (_pulse.value - 0.8) * 16,
                           ),
@@ -148,7 +148,7 @@ class _LoginBodyState extends State<_LoginBody> with TickerProviderStateMixin {
                   const SizedBox(height: 24),
                   ShaderMask(
                     shaderCallback: (bounds) =>
-                        AppColors.tealGradient.createShader(bounds),
+                        AppColors.primaryGradient(Theme.of(context).colorScheme.primary).createShader(bounds),
                     child: const Text(
                       appName,
                       style: TextStyle(

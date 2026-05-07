@@ -35,7 +35,7 @@ class CategoryListPage extends GetView<CategoryController> {
                 child: TabBar(
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(9),
-                    gradient: AppColors.tealGradient,
+                    gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
@@ -53,8 +53,8 @@ class CategoryListPage extends GetView<CategoryController> {
         ),
         body: Obx(() {
           if (controller.isLoading.value) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.tealMid),
+            return Center(
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
             );
           }
           return TabBarView(
@@ -80,7 +80,7 @@ class CategoryListPage extends GetView<CategoryController> {
             controller.prepareForm();
             Get.toNamed(AppRoutes.categoryAdd);
           },
-          backgroundColor: AppColors.tealMid,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: const Text('Add Category',
               style: TextStyle(
@@ -116,11 +116,11 @@ class _CategoryTab extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.tealGlowSoft,
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.category_outlined,
-                  color: AppColors.tealMid, size: 30),
+              child: Icon(Icons.category_outlined,
+                  color: Theme.of(context).colorScheme.primary, size: 30),
             ),
             const SizedBox(height: 16),
             Text('No categories yet',
@@ -249,9 +249,9 @@ class _CategoryCard extends StatelessWidget {
                             size: 18, color: Colors.redAccent),
                         onPressed: () => _confirmDelete(context),
                       ),
-                    const Icon(Icons.chevron_right_rounded,
+                    Icon(Icons.chevron_right_rounded,
                         size: 20,
-                        color: AppColors.tealMid),
+                        color: Theme.of(context).colorScheme.primary),
                   ],
                 ),
               ),
@@ -312,14 +312,14 @@ class _CategoryCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.tealMid.withValues(alpha: 0.1),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
                                 '+${subs.length - 4} more',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 11,
-                                    color: AppColors.tealMid,
+                                    color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.w500),
                               ),
                             )
@@ -571,14 +571,14 @@ class _SubcategorySheetState extends State<_SubcategorySheet> {
                               height: 48,
                               decoration: BoxDecoration(
                                 color: _showIconPicker
-                                    ? AppColors.tealMid.withValues(alpha: 0.15)
+                                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
                                     : (isDark
                                         ? Colors.white.withValues(alpha: 0.06)
                                         : AppColors.grey100),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: _showIconPicker
-                                      ? AppColors.tealMid
+                                      ? Theme.of(context).colorScheme.primary
                                       : (isDark
                                           ? AppColors.glassBorder
                                           : AppColors.grey200),
@@ -588,7 +588,7 @@ class _SubcategorySheetState extends State<_SubcategorySheet> {
                               child: Icon(
                                 IconMapper.get(ctrl.selectedSubIcon.value),
                                 color: _showIconPicker
-                                    ? AppColors.tealMid
+                                    ? Theme.of(context).colorScheme.primary
                                     : (isDark
                                         ? Colors.white.withValues(alpha: 0.5)
                                         : AppColors.grey500),
@@ -641,7 +641,7 @@ class _SubcategorySheetState extends State<_SubcategorySheet> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                gradient: AppColors.tealGradient,
+                                gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.add_rounded,
@@ -699,13 +699,13 @@ class _IconPickerGrid extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.tealMid.withValues(alpha: 0.2)
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
                       : (isDark
                           ? Colors.white.withValues(alpha: 0.05)
                           : AppColors.grey100),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isSelected ? AppColors.tealMid : Colors.transparent,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
                     width: 1.5,
                   ),
                 ),
@@ -713,7 +713,7 @@ class _IconPickerGrid extends StatelessWidget {
                   IconMapper.get(name),
                   size: 18,
                   color: isSelected
-                      ? AppColors.tealMid
+                      ? Theme.of(context).colorScheme.primary
                       : (isDark
                           ? Colors.white.withValues(alpha: 0.5)
                           : AppColors.grey600),

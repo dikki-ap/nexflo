@@ -18,7 +18,7 @@ class OnboardingPage extends GetView<OnboardingController> {
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
       body: Stack(
         children: [
-          // Ambient teal glow top-right
+          // Ambient glow top-right
           Positioned(
             top: -60,
             right: -60,
@@ -27,7 +27,7 @@ class OnboardingPage extends GetView<OnboardingController> {
               height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.tealMid.withValues(
+                color: Theme.of(context).colorScheme.primary.withValues(
                     alpha: isDark ? 0.12 : 0.08),
               ),
             ),
@@ -86,7 +86,7 @@ class _StepIndicator extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
                 color: isPast || isActive
-                    ? AppColors.tealMid
+                    ? Theme.of(context).colorScheme.primary
                     : (Theme.of(context).brightness == Brightness.dark
                         ? AppColors.grey700
                         : AppColors.grey200),
@@ -118,11 +118,11 @@ class _WelcomePage extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              gradient: AppColors.tealGradient,
+              gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.tealGlow,
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
                   blurRadius: 20,
                   offset: const Offset(0, 6),
                 ),
@@ -200,7 +200,7 @@ class _FeatureRow extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppColors.tealGlowSoft,
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -208,7 +208,7 @@ class _FeatureRow extends StatelessWidget {
                 _iconCode(icon),
                 fontFamily: 'MaterialIcons',
               ),
-              color: AppColors.tealMid,
+              color: Theme.of(context).colorScheme.primary,
               size: 20,
             ),
           ),
@@ -417,7 +417,7 @@ class _FirstWalletPage extends StatelessWidget {
                 Icon(
                   Icons.add_card_rounded,
                   size: 48,
-                  color: AppColors.tealMid.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -522,14 +522,14 @@ class _PageHeader extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.tealGlowSoft,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.tealMid.withValues(alpha: 0.3),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
-          child: Icon(icon, color: AppColors.tealMid, size: 26),
+          child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 26),
         ),
         const SizedBox(height: 20),
         Text(

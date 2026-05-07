@@ -30,7 +30,7 @@ class DashboardPage extends GetView<DashboardController> {
       backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
       body: RefreshIndicator(
         onRefresh: controller.loadAll,
-        color: AppColors.tealMid,
+        color: Theme.of(context).colorScheme.primary,
         displacement: 60,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -152,12 +152,12 @@ class _DashHeader extends StatelessWidget {
                         padding: EdgeInsets.all(11),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.tealMid,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.sync_rounded,
-                        color: AppColors.tealMid,
+                        color: Theme.of(context).colorScheme.primary,
                         size: 20,
                       ),
               ),
@@ -210,7 +210,7 @@ class _PeriodTabs extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: isActive ? AppColors.tealGradient : null,
+                  gradient: isActive ? AppColors.primaryGradient(Theme.of(context).colorScheme.primary) : null,
                   color: isActive
                       ? null
                       : (isDark ? AppColors.darkCard : AppColors.lightCard),
@@ -256,11 +256,11 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
       decoration: BoxDecoration(
-        gradient: AppColors.tealGradient,
+        gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.tealGlow,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 28,
             offset: const Offset(0, 8),
           ),
@@ -428,13 +428,13 @@ class _WalletsSection extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.add_rounded,
-                        color: AppColors.tealMid, size: 20),
+                    Icon(Icons.add_rounded,
+                        color: Theme.of(context).colorScheme.primary, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Add your first wallet',
                       style: TextStyle(
-                        color: AppColors.tealMid,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -551,12 +551,12 @@ class _WalletsSection extends StatelessWidget {
 class _PlanItem {
   final IconData icon;
   final String label;
-  final Color color;
+  final Color? color;
   final String route;
   const _PlanItem({
     required this.icon,
     required this.label,
-    required this.color,
+    this.color,
     required this.route,
   });
 }
@@ -588,7 +588,6 @@ class _PlanningSection extends StatelessWidget {
     _PlanItem(
       icon: Icons.repeat_rounded,
       label: 'Recurring',
-      color: AppColors.tealMid,
       route: AppRoutes.recurring,
     ),
   ];
@@ -630,10 +629,11 @@ class _PlanningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = item.color ?? Theme.of(context).colorScheme.primary;
     return GlassCard(
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      color: item.color.withValues(alpha: isDark ? 0.12 : 0.07),
+      color: color.withValues(alpha: isDark ? 0.12 : 0.07),
       onTap: () {
         HapticFeedback.lightImpact();
         Get.toNamed(item.route);
@@ -645,10 +645,10 @@ class _PlanningCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(item.icon, color: item.color, size: 20),
+            child: Icon(item.icon, color: color, size: 20),
           ),
           const SizedBox(height: 7),
           Text(
@@ -656,7 +656,7 @@ class _PlanningCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: item.color,
+              color: color,
             ),
           ),
         ],

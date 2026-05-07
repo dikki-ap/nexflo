@@ -51,8 +51,8 @@ class CategoryFormPage extends GetView<CategoryController> {
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.35)
                           : AppColors.grey400),
-                  prefixIcon: const Icon(Icons.label_outline_rounded,
-                      color: AppColors.tealMid),
+                  prefixIcon: Icon(Icons.label_outline_rounded,
+                      color: Theme.of(context).colorScheme.primary),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -85,7 +85,7 @@ class CategoryFormPage extends GetView<CategoryController> {
                                       const EdgeInsets.symmetric(vertical: 11),
                                   decoration: BoxDecoration(
                                     color: controller.selectedType.value == t
-                                        ? AppColors.tealMid
+                                        ? Theme.of(context).colorScheme.primary
                                         : Colors.transparent,
                                     borderRadius: BorderRadius.circular(12),
                                   ),

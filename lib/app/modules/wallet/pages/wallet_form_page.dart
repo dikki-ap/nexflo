@@ -123,10 +123,10 @@ class WalletFormPage extends GetView<WalletController> {
                         padding: const EdgeInsets.fromLTRB(0, 14, 8, 0),
                         child: Text(
                           Get.find<CurrencyService>().currencySymbol,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.tealMid,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -190,10 +190,10 @@ class WalletFormPage extends GetView<WalletController> {
                                   const EdgeInsets.fromLTRB(0, 12, 8, 0),
                               child: Text(
                                 Get.find<CurrencyService>().currencySymbol,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.tealMid,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -241,7 +241,7 @@ class WalletFormPage extends GetView<WalletController> {
                     ),
                     value: controller.isExcludeTotal.value,
                     onChanged: (v) => controller.isExcludeTotal.value = v,
-                    activeColor: AppColors.tealMid,
+                    activeColor: Theme.of(context).colorScheme.primary,
                   )),
             ),
             const SizedBox(height: 28),
@@ -319,7 +319,7 @@ class _ColorPickerSection extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: ctrl.selectedColor.value == c
                                   ? Border.all(
-                                      color: AppColors.tealMid,
+                                      color: Theme.of(context).colorScheme.primary,
                                       width: 3,
                                     )
                                   : Border.all(
@@ -401,14 +401,14 @@ class _IconPickerSection extends StatelessWidget {
                             height: 46,
                             decoration: BoxDecoration(
                               color: ctrl.selectedIcon.value == name
-                                  ? AppColors.tealGlowSoft
+                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                                   : (isDark
                                       ? AppColors.darkCard
                                       : AppColors.lightCard),
                               borderRadius: BorderRadius.circular(12),
                               border: ctrl.selectedIcon.value == name
                                   ? Border.all(
-                                      color: AppColors.tealMid,
+                                      color: Theme.of(context).colorScheme.primary,
                                       width: 1.5,
                                     )
                                   : null,
@@ -417,7 +417,7 @@ class _IconPickerSection extends StatelessWidget {
                               IconMapper.get(name),
                               size: 22,
                               color: ctrl.selectedIcon.value == name
-                                  ? AppColors.tealMid
+                                  ? Theme.of(context).colorScheme.primary
                                   : (isDark
                                       ? Colors.white.withValues(alpha: 0.6)
                                       : AppColors.grey500),

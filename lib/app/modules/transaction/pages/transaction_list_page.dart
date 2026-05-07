@@ -93,11 +93,11 @@ class TransactionListPage extends GetView<TransactionController> {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            gradient: AppColors.tealGradient,
+            gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.tealGlow,
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -232,13 +232,13 @@ class _EmptyState extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.tealGlowSoft,
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.receipt_long_outlined,
               size: 36,
-              color: AppColors.tealMid,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 20),

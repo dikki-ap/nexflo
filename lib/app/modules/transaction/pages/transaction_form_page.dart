@@ -117,10 +117,10 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                                   const EdgeInsets.fromLTRB(16, 14, 4, 0),
                               child: Text(
                                 Get.find<CurrencyService>().currencySymbol,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.tealMid,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -423,7 +423,7 @@ class _SubcategoryChips extends GetView<TransactionController> {
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: controller.selectedSubcategoryId.value == null
-                              ? AppColors.tealMid.withValues(alpha: 0.15)
+                              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
                               : (isDark
                                   ? Colors.white.withValues(alpha: 0.06)
                                   : AppColors.grey100),
@@ -431,7 +431,7 @@ class _SubcategoryChips extends GetView<TransactionController> {
                           border: Border.all(
                             color:
                                 controller.selectedSubcategoryId.value == null
-                                    ? AppColors.tealMid
+                                    ? Theme.of(context).colorScheme.primary
                                     : Colors.transparent,
                             width: 1,
                           ),
@@ -443,7 +443,7 @@ class _SubcategoryChips extends GetView<TransactionController> {
                             fontWeight: FontWeight.w500,
                             color: controller.selectedSubcategoryId.value ==
                                     null
-                                ? AppColors.tealMid
+                                ? Theme.of(context).colorScheme.primary
                                 : (isDark
                                     ? Colors.white.withValues(alpha: 0.5)
                                     : AppColors.grey500),
