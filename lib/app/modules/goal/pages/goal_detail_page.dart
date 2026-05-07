@@ -19,9 +19,6 @@ class GoalDetailPage extends GetView<GoalController> {
   Widget build(BuildContext context) {
     final goal = Get.arguments as GoalEntity;
     final color = ColorHelper.fromHex(goal.colorHex);
-    final isDone = goal.status == GoalStatus.completed;
-    final onTrack = controller.onTrackLabel(goal);
-    final projected = controller.projectedCompletion(goal);
     final sym = Get.find<CurrencyService>().currencySymbol;
 
     // Load allocation history when page opens
@@ -46,157 +43,163 @@ class GoalDetailPage extends GetView<GoalController> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Hero progress circle
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withValues(alpha: 0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        child: Obx(() {
+          final g = controller.goals.firstWhereOrNull((x) => x.id == goal.id) ?? goal;
+          final isDone = g.status == GoalStatus.completed;
+          final onTrack = controller.onTrackLabel(g);
+          final projected = controller.projectedCompletion(g);
+          return Column(
+            children: [
+              // Hero progress circle
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withValues(alpha: 0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.2),
-                    ),
-                    child: Icon(IconMapper.get(goal.iconName),
-                        color: Colors.white, size: 28),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '$sym ${_fmt(goal.currentAmount)} / $sym ${_fmt(goal.targetAmount)}',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: goal.progress,
-                      minHeight: 10,
-                      backgroundColor: Colors.white.withValues(alpha: 0.25),
-                      valueColor: const AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${(goal.progress * 100).toStringAsFixed(1)}% reached',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _GoalProgressChart(goal: goal, color: color),
-            const SizedBox(height: 16),
-            // Info card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _InfoRow('Status', isDone ? 'Completed' : 'Active'),
-                    if (onTrack.isNotEmpty)
-                      _InfoRow('Progress', onTrack,
-                          valueColor: onTrack == 'On Track'
-                              ? AppColors.income
-                              : AppColors.budgetAlert),
-                    if (goal.daysRemaining != null)
-                      _InfoRow(
-                        'Deadline',
-                        goal.daysRemaining! >= 0
-                            ? '${goal.daysRemaining} days left'
-                            : 'Overdue',
-                        valueColor: goal.daysRemaining! < 0
-                            ? AppColors.expense
-                            : null,
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
-                    if (projected != null)
-                      _InfoRow('Projected Completion', _fmtDate(projected)),
-                    if (goal.note != null && goal.note!.isNotEmpty)
-                      _InfoRow('Note', goal.note!),
+                      child: Icon(IconMapper.get(g.iconName),
+                          color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '$sym ${_fmt(g.currentAmount)} / $sym ${_fmt(g.targetAmount)}',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: g.progress,
+                        minHeight: 10,
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                        valueColor: const AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${(g.progress * 100).toStringAsFixed(1)}% reached',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13),
+                    ),
                   ],
                 ),
               ),
-            ),
-            if (!isDone) ...[
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _showAllocateSheet(context, goal),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Allocate Funds'),
+              _GoalProgressChart(goal: g, color: color),
+              const SizedBox(height: 16),
+              // Info card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _InfoRow('Status', isDone ? 'Completed' : 'Active'),
+                      if (onTrack.isNotEmpty)
+                        _InfoRow('Progress', onTrack,
+                            valueColor: onTrack == 'On Track'
+                                ? AppColors.income
+                                : AppColors.budgetAlert),
+                      if (g.daysRemaining != null)
+                        _InfoRow(
+                          'Deadline',
+                          g.daysRemaining! >= 0
+                              ? '${g.daysRemaining} days left'
+                              : 'Overdue',
+                          valueColor: g.daysRemaining! < 0
+                              ? AppColors.expense
+                              : null,
+                        ),
+                      if (projected != null)
+                        _InfoRow('Projected Completion', _fmtDate(projected)),
+                      if (g.note != null && g.note!.isNotEmpty)
+                        _InfoRow('Note', g.note!),
+                    ],
+                  ),
                 ),
               ),
+              if (!isDone) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _showAllocateSheet(context, g),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Allocate Funds'),
+                  ),
+                ),
+              ],
+              // Allocation history
+              Obx(() {
+                final history = controller.allocationHistory;
+                if (history.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    const Text(
+                      'ALLOCATION HISTORY',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      child: Column(
+                        children: history.map((tx) {
+                          return ListTile(
+                            leading: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.savings_outlined,
+                                  color: color, size: 18),
+                            ),
+                            title: Text(
+                              _fmtDate(tx.date),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
+                            trailing: Text(
+                              '+ $sym ${_fmt(tx.amount)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ],
-            // Allocation history
-            Obx(() {
-              final history = controller.allocationHistory;
-              if (history.isEmpty) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  const Text(
-                    'ALLOCATION HISTORY',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Card(
-                    child: Column(
-                      children: history.map((tx) {
-                        return ListTile(
-                          leading: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(Icons.savings_outlined,
-                                color: color, size: 18),
-                          ),
-                          title: Text(
-                            _fmtDate(tx.date),
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w500),
-                          ),
-                          trailing: Text(
-                            '+ $sym ${_fmt(tx.amount)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: color,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }

@@ -760,7 +760,7 @@ class _TxTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         onTap: () => Get.toNamed(
           AppRoutes.transactionDetail.replaceFirst(':id', tx.id),
-          arguments: tx,
+          arguments: tx.id,
         ),
         child: Row(
           children: [

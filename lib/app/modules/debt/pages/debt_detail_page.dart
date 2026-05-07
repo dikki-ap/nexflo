@@ -18,8 +18,6 @@ class DebtDetailPage extends GetView<DebtController> {
     final debt = Get.arguments as DebtEntity;
     final isIOwe = debt.type == DebtType.iOwe;
     final color = isIOwe ? AppColors.expense : AppColors.income;
-    final progress =
-        debt.amount > 0 ? (debt.paidAmount / debt.amount).clamp(0.0, 1.0) : 0.0;
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) => controller.loadPayments(debt.id));
@@ -46,112 +44,121 @@ class DebtDetailPage extends GetView<DebtController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
+            Obx(() {
+              final d = controller.debts.firstWhereOrNull((x) => x.id == debt.id) ?? debt;
+              final progress = d.amount > 0 ? (d.paidAmount / d.amount).clamp(0.0, 1.0) : 0.0;
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
+                  // Hero section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(d.type.label,
+                                  style: TextStyle(
+                                      color: color,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                            if (d.isOverdue) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.expense.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text('Overdue',
+                                    style: TextStyle(
+                                        color: AppColors.expense,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ],
                         ),
-                        child: Text(debt.type.label,
+                        const SizedBox(height: 12),
+                        Text(
+                          '${Get.find<CurrencyService>().currencySymbol} ${_fmt(d.remaining)}',
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: color),
+                        ),
+                        Text('remaining of ${_fmt(d.amount)}',
                             style: TextStyle(
-                                color: color,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                      if (debt.isOverdue) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.expense.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
+                                fontSize: 13,
+                                color: color.withValues(alpha: 0.7))),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 8,
+                            backgroundColor: color.withValues(alpha: 0.15),
+                            valueColor: AlwaysStoppedAnimation(color),
                           ),
-                          child: const Text('Overdue',
-                              style: TextStyle(
-                                  color: AppColors.expense,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(progress * 100).toStringAsFixed(0)}% paid',
+                          style: TextStyle(
+                              fontSize: 12, color: color.withValues(alpha: 0.7)),
                         ),
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.remaining)}',
-                    style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: color),
-                  ),
-                  Text('remaining of ${_fmt(debt.amount)}',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: color.withValues(alpha: 0.7))),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 8,
-                      backgroundColor: color.withValues(alpha: 0.15),
-                      valueColor: AlwaysStoppedAnimation(color),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(0)}% paid',
-                    style: TextStyle(
-                        fontSize: 12, color: color.withValues(alpha: 0.7)),
+                  const SizedBox(height: 16),
+                  // Info card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _InfoRow('Total Amount',
+                              '${Get.find<CurrencyService>().currencySymbol} ${_fmt(d.amount)}'),
+                          _InfoRow('Paid',
+                              '${Get.find<CurrencyService>().currencySymbol} ${_fmt(d.paidAmount)}',
+                              valueColor: AppColors.income),
+                          _InfoRow('Status', _statusLabel(d.status.value)),
+                          if (d.deadline != null)
+                            _InfoRow('Deadline', _fmtDate(d.deadline!)),
+                          if (d.note != null && d.note!.isNotEmpty)
+                            _InfoRow('Note', d.note!),
+                        ],
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 16),
+                  if (d.remaining > 0)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () => _showPaymentSheet(context, d),
+                        icon: const Icon(Icons.payment),
+                        label: const Text('Record Payment'),
+                      ),
+                    ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Info card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _InfoRow('Total Amount',
-                        '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.amount)}'),
-                    _InfoRow('Paid',
-                        '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.paidAmount)}',
-                        valueColor: AppColors.income),
-                    _InfoRow('Status', _statusLabel(debt.status.value)),
-                    if (debt.deadline != null)
-                      _InfoRow('Deadline', _fmtDate(debt.deadline!)),
-                    if (debt.note != null && debt.note!.isNotEmpty)
-                      _InfoRow('Note', debt.note!),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (debt.remaining > 0)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _showPaymentSheet(context, debt),
-                  icon: const Icon(Icons.payment),
-                  label: const Text('Record Payment'),
-                ),
-              ),
+              );
+            }),
             const SizedBox(height: 20),
             // Payment history
             const Text('Payment History',

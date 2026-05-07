@@ -18,6 +18,8 @@ class WalletDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wallet = Get.arguments as WalletEntity;
+    final walletId = wallet.id;
+    final ctrl = Get.find<WalletController>();
     final color = ColorHelper.fromHex(wallet.colorHex);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -110,17 +112,20 @@ class WalletDetailPage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            AnimatedAmount(
-                              amount: wallet.balance,
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                                color: wallet.balance >= 0
-                                    ? AppColors.income
-                                    : AppColors.expense,
-                              ),
-                            ),
+                            Obx(() {
+                              final w = ctrl.wallets.firstWhereOrNull((x) => x.id == walletId) ?? wallet;
+                              return AnimatedAmount(
+                                amount: w.balance,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.5,
+                                  color: w.balance >= 0
+                                      ? AppColors.income
+                                      : AppColors.expense,
+                                ),
+                              );
+                            }),
                           ],
                         ),
                         Container(

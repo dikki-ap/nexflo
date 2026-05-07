@@ -70,7 +70,7 @@ class TransactionListPage extends GetView<TransactionController> {
                             onTap: () => Get.toNamed(
                               AppRoutes.transactionDetail
                                   .replaceFirst(':id', tx.id),
-                              arguments: tx,
+                              arguments: tx.id,
                             ),
                             onDelete: () =>
                                 controller.deleteTransaction(tx.id),

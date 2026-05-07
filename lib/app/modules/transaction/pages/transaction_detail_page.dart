@@ -7,104 +7,129 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/transaction_type.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/icon_mapper.dart';
-import '../../../domain/entities/transaction_entity.dart';
 
 class TransactionDetailPage extends StatelessWidget {
   const TransactionDetailPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final tx = Get.arguments as TransactionEntity;
+    final txId = Get.arguments as String;
     final ctrl = Get.find<TransactionController>();
-    final category = ctrl.categoryById(tx.categoryId);
-    final wallet = ctrl.walletById(tx.walletId);
-
-    final isExpense = tx.type == TransactionType.expense;
-    final isTransfer = tx.type == TransactionType.transfer;
-    final amountColor = isTransfer
-        ? AppColors.transfer
-        : isExpense
-            ? AppColors.expense
-            : AppColors.income;
-    final sign = isExpense ? '-' : isTransfer ? '' : '+';
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transaction Detail'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () {
-              ctrl.prepareForm(tx);
-              Get.toNamed(
-                AppRoutes.transactionEdit.replaceFirst(':id', tx.id),
-                arguments: tx,
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: () => _confirmDelete(context, ctrl, tx.id),
-          ),
-        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Amount hero
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              decoration: BoxDecoration(
-                color: amountColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  if (category != null)
-                    Icon(
-                      IconMapper.get(category.iconName),
-                      size: 40,
-                      color: ColorHelper.fromHex(category.colorHex),
+      body: Obx(() {
+        final tx = ctrl.transactions.firstWhereOrNull((t) => t.id == txId);
+        if (tx == null) {
+          return const Center(child: Text('Transaction not found'));
+        }
+
+        final category = ctrl.categoryById(tx.categoryId);
+        final wallet = ctrl.walletById(tx.walletId);
+        final toWallet = tx.toWalletId != null
+            ? ctrl.walletById(tx.toWalletId)
+            : null;
+
+        final isExpense = tx.type == TransactionType.expense;
+        final isTransfer = tx.type == TransactionType.transfer;
+        final amountColor = isTransfer
+            ? AppColors.transfer
+            : isExpense
+                ? AppColors.expense
+                : AppColors.income;
+        final sign = isExpense ? '-' : isTransfer ? '' : '+';
+
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Amount hero
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                decoration: BoxDecoration(
+                  color: amountColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    if (category != null)
+                      Icon(
+                        IconMapper.get(category.iconName),
+                        size: 40,
+                        color: ColorHelper.fromHex(category.colorHex),
+                      ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '$sign${wallet?.currencyCode ?? ''} ${_fmt(tx.amount)}',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: amountColor,
+                      ),
                     ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '$sign${wallet?.currencyCode ?? ''} ${_fmt(tx.amount)}',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: amountColor,
+                    Text(
+                      category?.name ?? tx.type.name,
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: amountColor.withValues(alpha: 0.8)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(children: [
+                    _Row('Type', tx.type.name.toUpperCase()),
+                    _Row(
+                      isTransfer ? 'From Wallet' : isExpense ? 'Wallet' : 'To Wallet',
+                      wallet?.name ?? tx.walletId,
+                    ),
+                    if (isTransfer && toWallet != null)
+                      _Row('To Wallet', toWallet.name),
+                    _Row('Date', _formatDate(tx.date)),
+                    if (tx.note != null && tx.note!.isNotEmpty)
+                      _Row('Note', tx.note!),
+                  ]),
+                ),
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit'),
+                      onPressed: () {
+                        ctrl.prepareForm(tx);
+                        Get.toNamed(
+                          AppRoutes.transactionEdit.replaceFirst(':id', tx.id),
+                          arguments: tx,
+                        );
+                      },
                     ),
                   ),
-                  Text(
-                    category?.name ?? tx.type.name,
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: amountColor.withValues(alpha: 0.8)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red)),
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                      onPressed: () => _confirmDelete(context, ctrl, tx.id),
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(children: [
-                  _Row('Type', tx.type.name.toUpperCase()),
-                  _Row('Wallet', wallet?.name ?? tx.walletId),
-                  _Row('Date', _formatDate(tx.date)),
-                  if (tx.note != null && tx.note!.isNotEmpty)
-                    _Row('Note', tx.note!),
-                  if (isTransfer && tx.toWalletId != null)
-                    _Row('To Wallet',
-                        ctrl.walletById(tx.toWalletId)?.name ?? tx.toWalletId!),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
