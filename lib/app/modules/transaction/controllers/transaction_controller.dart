@@ -45,6 +45,8 @@ class TransactionController extends GetxController {
       Get.find<SharedFilterController>();
 
   Rx<FilterPeriod> get selectedPeriod => _sharedFilter.selectedPeriod;
+  DateTime? get customStart => _sharedFilter.customStart.value;
+  DateTime? get customEnd => _sharedFilter.customEnd.value;
 
   // Form fields
   final selectedTab = 0.obs; // 0=expense 1=income 2=transfer

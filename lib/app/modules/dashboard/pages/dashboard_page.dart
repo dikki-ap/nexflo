@@ -148,8 +148,8 @@ class _DashHeader extends StatelessWidget {
                   ),
                 ),
                 child: sync.isSyncing
-                    ? const Padding(
-                        padding: EdgeInsets.all(11),
+                    ? Padding(
+                        padding: const EdgeInsets.all(11),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Theme.of(context).colorScheme.primary,

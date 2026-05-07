@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../../core/enums/filter_period.dart';
+import '../../core/enums/filter_period.dart';
 
 class SharedFilterController extends GetxController {
   final selectedPeriod = FilterPeriod.thisMonth.obs;
