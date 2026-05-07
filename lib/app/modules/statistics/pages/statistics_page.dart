@@ -417,20 +417,31 @@ class _IncomeExpenseChart extends StatelessWidget {
 
 // ── Expense donut chart ──────────────────────────────────────────────────────
 
-class _ExpenseDonutChart extends StatelessWidget {
+class _ExpenseDonutChart extends StatefulWidget {
   final StatisticsController ctrl;
   final double hPad;
   final bool isDark;
   const _ExpenseDonutChart(this.ctrl, this.hPad, this.isDark);
 
   @override
+  State<_ExpenseDonutChart> createState() => _ExpenseDonutChartState();
+}
+
+class _ExpenseDonutChartState extends State<_ExpenseDonutChart> {
+  int _selectedIndex = -1;
+
+  @override
   Widget build(BuildContext context) {
-    final cats = ctrl.topCategories;
+    final cats = widget.ctrl.topCategories;
     final total = cats.fold(0.0, (s, c) => s + c.amount);
     if (total == 0) return const SizedBox.shrink();
 
+    final selectedCa = _selectedIndex >= 0 && _selectedIndex < cats.length
+        ? cats[_selectedIndex]
+        : null;
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPad),
+      padding: EdgeInsets.symmetric(horizontal: widget.hPad),
       child: GlassCard(
         borderRadius: 20,
         padding: const EdgeInsets.all(16),
@@ -442,7 +453,7 @@ class _ExpenseDonutChart extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : AppColors.grey900,
+                color: widget.isDark ? Colors.white : AppColors.grey900,
               ),
             ),
             const SizedBox(height: 16),
@@ -451,35 +462,76 @@ class _ExpenseDonutChart extends StatelessWidget {
                 SizedBox(
                   width: 140,
                   height: 140,
-                  child: PieChart(
-                    PieChartData(
-                      sections: cats.map((ca) {
-                        final pct = ca.amount / total * 100;
-                        final color = ctrl.categoryColor(ca);
-                        return PieChartSectionData(
-                          value: ca.amount,
-                          color: color,
-                          radius: 52,
-                          title: '${pct.toStringAsFixed(0)}%',
-                          titleStyle: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PieChart(
+                        PieChartData(
+                          pieTouchData: PieTouchData(
+                            touchCallback: (event, response) {
+                              if (!event.isInterestedForInteractions ||
+                                  response == null ||
+                                  response.touchedSection == null) {
+                                setState(() => _selectedIndex = -1);
+                                return;
+                              }
+                              setState(() {
+                                _selectedIndex = response
+                                    .touchedSection!.touchedSectionIndex;
+                              });
+                            },
                           ),
-                          titlePositionPercentageOffset: 0.6,
-                        );
-                      }).toList(),
-                      centerSpaceRadius: 34,
-                      sectionsSpace: 2,
-                    ),
+                          sections: cats.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final ca = entry.value;
+                            final pct = ca.amount / total * 100;
+                            final color = widget.ctrl.categoryColor(ca);
+                            final isSelected = i == _selectedIndex;
+                            return PieChartSectionData(
+                              value: ca.amount,
+                              color: color,
+                              radius: isSelected ? 58 : 52,
+                              title: '${pct.toStringAsFixed(0)}%',
+                              titleStyle: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              titlePositionPercentageOffset: 0.6,
+                            );
+                          }).toList(),
+                          centerSpaceRadius: 34,
+                          sectionsSpace: 2,
+                        ),
+                      ),
+                      if (selectedCa != null)
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _fmt(selectedCa.amount),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: widget.isDark
+                                    ? Colors.white
+                                    : AppColors.grey900,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: cats.map((ca) {
-                      final color = ctrl.categoryColor(ca);
+                    children: cats.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final ca = entry.value;
+                      final color = widget.ctrl.categoryColor(ca);
+                      final isSelected = i == _selectedIndex;
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
@@ -496,7 +548,12 @@ class _ExpenseDonutChart extends StatelessWidget {
                                 ca.category?.name ?? 'Other',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDark ? Colors.white : AppColors.grey900,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  color: widget.isDark
+                                      ? Colors.white
+                                      : AppColors.grey900,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -513,6 +570,11 @@ class _ExpenseDonutChart extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _fmt(double v) {
+    final absStr = NumberFormat('#,##0').format(v.abs());
+    return v < 0 ? '-$absStr' : absStr;
   }
 }
 

@@ -27,6 +27,7 @@ import '../../../domain/usecases/subcategory/get_subcategories_usecase.dart';
 import '../../../services/auth_service.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
 import '../../main_nav/shared_filter_controller.dart';
+import '../../statistics/controllers/statistics_controller.dart';
 import '../../wallet/controllers/wallet_controller.dart';
 
 class TransactionController extends GetxController {
@@ -325,6 +326,9 @@ class TransactionController extends GetxController {
     if (Get.isRegistered<WalletController>()) {
       Get.find<WalletController>().loadWallets();
     }
+    if (Get.isRegistered<StatisticsController>()) {
+      Get.find<StatisticsController>().loadAll();
+    }
     Get.back();
   }
 
@@ -341,6 +345,9 @@ class TransactionController extends GetxController {
         }
         if (Get.isRegistered<WalletController>()) {
           Get.find<WalletController>().loadWallets();
+        }
+        if (Get.isRegistered<StatisticsController>()) {
+          Get.find<StatisticsController>().loadAll();
         }
         Get.snackbar(
           'Deleted',
