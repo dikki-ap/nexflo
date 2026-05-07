@@ -83,14 +83,13 @@ class BudgetLocalDataSource {
         ..where((t) => t.deletedAt.isNull());
       final rows = await query.get();
       var filtered = rows.toList();
-      if (!budget.isAllCategories && budget.categoryId != null) {
-        filtered = filtered
-            .where((t) => t.categoryId == budget.categoryId)
-            .toList();
+      final catIds = budget.categoryIds;
+      final walIds = budget.walletIds;
+      if (!budget.isAllCategories && catIds.isNotEmpty) {
+        filtered = filtered.where((t) => catIds.contains(t.categoryId)).toList();
       }
-      if (budget.walletId != null) {
-        filtered =
-            filtered.where((t) => t.walletId == budget.walletId).toList();
+      if (walIds.isNotEmpty) {
+        filtered = filtered.where((t) => walIds.contains(t.walletId)).toList();
       }
       return filtered.fold<double>(0.0, (s, t) => s + t.amount);
     } catch (e) {
@@ -111,14 +110,13 @@ class BudgetLocalDataSource {
         ..where((t) => t.deletedAt.isNull());
       final rows = await query.get();
       var filtered = rows.toList();
-      if (!budget.isAllCategories && budget.categoryId != null) {
-        filtered = filtered
-            .where((t) => t.categoryId == budget.categoryId)
-            .toList();
+      final catIds = budget.categoryIds;
+      final walIds = budget.walletIds;
+      if (!budget.isAllCategories && catIds.isNotEmpty) {
+        filtered = filtered.where((t) => catIds.contains(t.categoryId)).toList();
       }
-      if (budget.walletId != null) {
-        filtered =
-            filtered.where((t) => t.walletId == budget.walletId).toList();
+      if (walIds.isNotEmpty) {
+        filtered = filtered.where((t) => walIds.contains(t.walletId)).toList();
       }
       return filtered.fold<double>(0.0, (s, t) => s + t.amount);
     } catch (e) {

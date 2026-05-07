@@ -17,8 +17,8 @@ class CreateBudgetUseCase
         name: p.name,
         amount: p.amount,
         period: p.period,
-        categoryId: p.categoryId,
-        walletId: p.walletId,
+        categoryId: p.categoryIds.isEmpty ? null : p.categoryIds.join(','),
+        walletId: p.walletIds.isEmpty ? null : p.walletIds.join(','),
         isAllCategories: p.isAllCategories,
         rollover: p.rollover,
         alertAtPercent: p.alertAtPercent,
@@ -30,8 +30,8 @@ class CreateBudgetParams extends Equatable {
   final String name;
   final double amount;
   final String period;
-  final String? categoryId;
-  final String? walletId;
+  final List<String> categoryIds;
+  final List<String> walletIds;
   final bool isAllCategories;
   final bool rollover;
   final int alertAtPercent;
@@ -41,8 +41,8 @@ class CreateBudgetParams extends Equatable {
     required this.name,
     required this.amount,
     required this.period,
-    this.categoryId,
-    this.walletId,
+    this.categoryIds = const [],
+    this.walletIds = const [],
     required this.isAllCategories,
     required this.rollover,
     required this.alertAtPercent,

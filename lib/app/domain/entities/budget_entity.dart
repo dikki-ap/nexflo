@@ -34,6 +34,12 @@ class BudgetEntity extends Equatable {
     required this.syncStatus,
   });
 
+  List<String> get walletIds =>
+      walletId == null || walletId!.isEmpty ? [] : walletId!.split(',');
+
+  List<String> get categoryIds =>
+      categoryId == null || categoryId!.isEmpty ? [] : categoryId!.split(',');
+
   @override
   List<Object?> get props => [id, name, amount, period];
 }
