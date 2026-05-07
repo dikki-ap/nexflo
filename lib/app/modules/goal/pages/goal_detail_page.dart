@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../../core/enums/goal_status.dart';
 import '../../../core/utils/color_helper.dart';
 import '../../../core/utils/icon_mapper.dart';
 import '../../../domain/entities/goal_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/goal_controller.dart';
 
 class GoalDetailPage extends GetView<GoalController> {
@@ -19,6 +21,10 @@ class GoalDetailPage extends GetView<GoalController> {
     final isDone = goal.status == GoalStatus.completed;
     final onTrack = controller.onTrackLabel(goal);
     final projected = controller.projectedCompletion(goal);
+    final sym = Get.find<CurrencyService>().currencySymbol;
+
+    // Load allocation history when page opens
+    controller.loadAllocationHistory(goal);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,7 +73,7 @@ class GoalDetailPage extends GetView<GoalController> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${_fmt(goal.currentAmount)} / ${_fmt(goal.targetAmount)}',
+                    '$sym ${_fmt(goal.currentAmount)} / $sym ${_fmt(goal.targetAmount)}',
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -137,6 +143,57 @@ class GoalDetailPage extends GetView<GoalController> {
                 ),
               ),
             ],
+            // Allocation history
+            Obx(() {
+              final history = controller.allocationHistory;
+              if (history.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  const Text(
+                    'ALLOCATION HISTORY',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Card(
+                    child: Column(
+                      children: history.map((tx) {
+                        return ListTile(
+                          leading: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(Icons.savings_outlined,
+                                color: color, size: 18),
+                          ),
+                          title: Text(
+                            _fmtDate(tx.date),
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                          trailing: Text(
+                            '+ $sym ${_fmt(tx.amount)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: color,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              );
+            }),
           ],
         ),
       ),
@@ -145,6 +202,7 @@ class GoalDetailPage extends GetView<GoalController> {
 
   void _showAllocateSheet(BuildContext context, GoalEntity goal) {
     controller.allocateCtrl.clear();
+    controller.selectedAllocateWalletId.value = null;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -156,17 +214,76 @@ class GoalDetailPage extends GetView<GoalController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Allocate Funds',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 16),
+            // Wallet selector
+            Obx(() {
+              final wallets = controller.wallets;
+              if (wallets.isEmpty) {
+                return const Text('No wallets available',
+                    style: TextStyle(color: Colors.grey));
+              }
+              final sym = Get.find<CurrencyService>().currencySymbol;
+              return DropdownButtonFormField<String>(
+                value: controller.selectedAllocateWalletId.value,
+                decoration: const InputDecoration(
+                  labelText: 'From wallet',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                ),
+                items: wallets.map((w) {
+                  return DropdownMenuItem(
+                    value: w.id,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(w.name),
+                        Text(
+                          '$sym ${_fmt(w.balance)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (v) =>
+                    controller.selectedAllocateWalletId.value = v,
+              );
+            }),
+            // Available balance hint
+            Obx(() {
+              final wallet = controller.selectedWallet;
+              if (wallet == null) return const SizedBox(height: 12);
+              final sym = Get.find<CurrencyService>().currencySymbol;
+              return Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 4),
+                child: Text(
+                  'Available: $sym ${_fmt(wallet.balance)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              );
+            }),
             const SizedBox(height: 12),
             TextField(
               controller: controller.allocateCtrl,
-              autofocus: true,
+              autofocus: false,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
                 labelText: 'Amount to allocate',
-                prefixIcon: Icon(Icons.attach_money),
+                prefixText:
+                    '${Get.find<CurrencyService>().currencySymbol} ',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
             const SizedBox(height: 16),

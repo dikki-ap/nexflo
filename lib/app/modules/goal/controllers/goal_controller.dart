@@ -3,21 +3,33 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/goal_status.dart';
 import '../../../core/utils/color_helper.dart';
-import '../../../data/datasources/local/goal_local_ds.dart';
-import '../../../data/repositories/goal_repository_impl.dart';
 import '../../../data/database/app_database.dart';
+import '../../../data/datasources/local/goal_local_ds.dart';
+import '../../../data/datasources/local/transaction_local_ds.dart';
+import '../../../data/datasources/local/wallet_local_ds.dart';
+import '../../../data/repositories/goal_repository_impl.dart';
+import '../../../data/repositories/transaction_repository_impl.dart';
+import '../../../data/repositories/wallet_repository_impl.dart';
 import '../../../domain/entities/goal_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
+import '../../../domain/entities/wallet_entity.dart';
 import '../../../domain/usecases/goal/get_all_goals_usecase.dart';
 import '../../../domain/usecases/goal/create_goal_usecase.dart';
 import '../../../domain/usecases/goal/update_goal_usecase.dart';
 import '../../../domain/usecases/goal/delete_goal_usecase.dart';
 import '../../../domain/usecases/goal/allocate_to_goal_usecase.dart';
+import '../../../domain/usecases/transaction/create_transaction_usecase.dart';
+import '../../../domain/usecases/wallet/get_all_wallets_usecase.dart';
+import '../../../core/enums/filter_period.dart';
 import '../../../services/auth_service.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
 
 class GoalController extends GetxController {
   final goals = <GoalEntity>[].obs;
   final isLoading = false.obs;
+  final wallets = <WalletEntity>[].obs;
+  final selectedAllocateWalletId = Rxn<String>();
+  final allocationHistory = <TransactionEntity>[].obs;
 
   // Form state
   final nameCtrl = TextEditingController();
@@ -33,6 +45,9 @@ class GoalController extends GetxController {
   late final UpdateGoalUseCase _update;
   late final DeleteGoalUseCase _delete;
   late final AllocateToGoalUseCase _allocate;
+  late final GetAllWalletsUseCase _getWallets;
+  late final CreateTransactionUseCase _createTx;
+  late final TransactionLocalDataSource _txDs;
 
   String get _userId => Get.find<AuthService>().currentUser?.id ?? '';
 
@@ -40,6 +55,10 @@ class GoalController extends GetxController {
       goals.where((g) => g.status == GoalStatus.active).toList();
   List<GoalEntity> get completedGoals =>
       goals.where((g) => g.status == GoalStatus.completed).toList();
+
+  WalletEntity? get selectedWallet => selectedAllocateWalletId.value == null
+      ? null
+      : wallets.firstWhereOrNull((w) => w.id == selectedAllocateWalletId.value);
 
   @override
   void onInit() {
@@ -52,7 +71,16 @@ class GoalController extends GetxController {
     _update = UpdateGoalUseCase(repo);
     _delete = DeleteGoalUseCase(repo);
     _allocate = AllocateToGoalUseCase(repo);
+
+    final walletDs = WalletLocalDataSource(db);
+    _getWallets = GetAllWalletsUseCase(WalletRepositoryImpl(walletDs));
+
+    _txDs = TransactionLocalDataSource(db);
+    final txRepo = TransactionRepositoryImpl(_txDs, walletDs);
+    _createTx = CreateTransactionUseCase(txRepo);
+
     loadGoals();
+    loadWallets();
   }
 
   @override
@@ -72,6 +100,29 @@ class GoalController extends GetxController {
       (list) => goals.value = list,
     );
     isLoading.value = false;
+  }
+
+  Future<void> loadWallets() async {
+    final result = await _getWallets(GetAllWalletsParams(_userId));
+    result.fold((_) {}, (list) => wallets.value = list);
+  }
+
+  Future<void> loadAllocationHistory(GoalEntity goal) async {
+    final uid = _userId;
+    if (uid.isEmpty) return;
+    final rows = await _txDs.getByFilter(
+      userId: uid,
+      period: FilterPeriod.custom,
+      customStart: goal.createdAt,
+      customEnd: DateTime.now(),
+    );
+    allocationHistory.value = rows
+        .where((t) =>
+            t.note != null &&
+            t.note!.startsWith('Goal: ${goal.name}') &&
+            t.type.value == 'expense')
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
   }
 
   void initForm([GoalEntity? existing]) {
@@ -157,6 +208,37 @@ class GoalController extends GetxController {
       Get.snackbar('Error', 'Enter a valid amount');
       return;
     }
+    if (selectedAllocateWalletId.value == null) {
+      Get.snackbar('Error', 'Please select a wallet');
+      return;
+    }
+    final wallet = selectedWallet;
+    if (wallet == null) {
+      Get.snackbar('Error', 'Selected wallet not found');
+      return;
+    }
+    if (added > wallet.balance) {
+      Get.snackbar(
+        'Insufficient Balance',
+        '${wallet.name} only has ${wallet.balance.toStringAsFixed(0)} available',
+      );
+      return;
+    }
+
+    final txResult = await _createTx(CreateTransactionParams(
+      userId: _userId,
+      walletId: wallet.id,
+      type: 'expense',
+      amount: added,
+      date: DateTime.now(),
+      note: 'Goal: ${goal.name}',
+    ));
+
+    if (txResult.isLeft()) {
+      txResult.fold((f) => Get.snackbar('Error', f.message), (_) {});
+      return;
+    }
+
     final newTotal =
         (goal.currentAmount + added).clamp(0.0, goal.targetAmount);
     final result =
@@ -165,6 +247,8 @@ class GoalController extends GetxController {
       allocateCtrl.clear();
       Get.back();
       loadGoals();
+      loadWallets();
+      loadAllocationHistory(goal);
       _notifyDashboard();
     });
   }
