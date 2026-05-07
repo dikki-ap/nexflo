@@ -25,6 +25,8 @@ import '../../../domain/usecases/wallet/get_all_wallets_usecase.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/subcategory/get_subcategories_usecase.dart';
 import '../../../services/auth_service.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
+import '../../wallet/controllers/wallet_controller.dart';
 
 class TransactionController extends GetxController {
   final transactions = <TransactionEntity>[].obs;
@@ -38,6 +40,8 @@ class TransactionController extends GetxController {
   final filterCategoryId = Rxn<String>();
   final filterType = Rxn<TransactionType>();
   final searchQuery = ''.obs;
+  DateTime? customStart;
+  DateTime? customEnd;
 
   // Form fields
   final selectedTab = 0.obs; // 0=expense 1=income 2=transfer
@@ -97,6 +101,12 @@ class TransactionController extends GetxController {
       if (catId != null) _loadSubcategories(catId);
     });
 
+    ever(selectedTab, (_) {
+      selectedCategoryId.value = null;
+      selectedSubcategoryId.value = null;
+      subcategories.clear();
+    });
+
     _loadWallets();
     _loadCategories();
     loadTransactions();
@@ -138,6 +148,8 @@ class TransactionController extends GetxController {
       categoryId: filterCategoryId.value,
       type: filterType.value,
       searchQuery: searchQuery.value.isEmpty ? null : searchQuery.value,
+      customStart: customStart,
+      customEnd: customEnd,
     ));
     r.fold(
       (f) => Get.snackbar('Error', f.message),
@@ -157,6 +169,17 @@ class TransactionController extends GetxController {
 
   void changePeriod(FilterPeriod p) {
     selectedPeriod.value = p;
+    if (p != FilterPeriod.custom) {
+      customStart = null;
+      customEnd = null;
+    }
+    loadTransactions();
+  }
+
+  void applyCustomRange(DateTime start, DateTime end) {
+    customStart = start;
+    customEnd = end;
+    selectedPeriod.value = FilterPeriod.custom;
     loadTransactions();
   }
 
@@ -293,6 +316,12 @@ class TransactionController extends GetxController {
     isLoading.value = false;
     HapticFeedback.mediumImpact();
     await loadTransactions();
+    if (Get.isRegistered<DashboardController>()) {
+      Get.find<DashboardController>().loadAll();
+    }
+    if (Get.isRegistered<WalletController>()) {
+      Get.find<WalletController>().loadWallets();
+    }
     Get.back();
   }
 
@@ -301,18 +330,20 @@ class TransactionController extends GetxController {
     final r = await _delete(DeleteTransactionParams(id));
     r.fold(
       (f) => Get.snackbar('Error', f.message),
-      (_) {
+      (_) async {
         transactions.removeWhere((t) => t.id == id);
+        await loadTransactions();
+        if (Get.isRegistered<DashboardController>()) {
+          Get.find<DashboardController>().loadAll();
+        }
+        if (Get.isRegistered<WalletController>()) {
+          Get.find<WalletController>().loadWallets();
+        }
         Get.snackbar(
           'Deleted',
           'Transaction removed',
           snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-          mainButton: TextButton(
-            onPressed: () {}, // TODO: undo
-            child: const Text('UNDO',
-                style: TextStyle(color: Colors.white)),
-          ),
+          duration: const Duration(seconds: 2),
         );
       },
     );

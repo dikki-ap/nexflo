@@ -292,7 +292,7 @@ class _TxSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    if (query.isNotEmpty) ctrl.setSearch(query);
+    ctrl.setSearch(query);
     return _buildList();
   }
 

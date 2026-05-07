@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/enums/debt_type.dart';
 import '../../../domain/entities/debt_entity.dart';
+import '../../../services/currency_service.dart';
 import '../controllers/debt_controller.dart';
 
 class DebtFormPage extends GetView<DebtController> {
   const DebtFormPage({super.key});
-
-  static const _currencies = [
-    'IDR', 'USD', 'EUR', 'SGD', 'MYR', 'JPY', 'GBP', 'AUD',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -78,36 +76,14 @@ class DebtFormPage extends GetView<DebtController> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: controller.amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
-                      prefixIcon: Icon(Icons.attach_money),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: Obx(() => DropdownButtonFormField<String>(
-                        value: controller.selectedCurrency.value,
-                        items: _currencies
-                            .map((c) => DropdownMenuItem(
-                                value: c, child: Text(c)))
-                            .toList(),
-                        onChanged: (v) =>
-                            controller.selectedCurrency.value = v!,
-                        decoration:
-                            const InputDecoration(labelText: 'Currency'),
-                      )),
-                ),
-              ],
+            TextField(
+              controller: controller.amountCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+              decoration: InputDecoration(
+                labelText: 'Amount',
+                prefixText: '${Get.find<CurrencyService>().currencySymbol} ',
+              ),
             ),
             const SizedBox(height: 16),
             Obx(() => InkWell(

@@ -13,6 +13,8 @@ import '../../../domain/usecases/debt/delete_debt_usecase.dart';
 import '../../../domain/usecases/debt/add_debt_payment_usecase.dart';
 import '../../../domain/usecases/debt/get_debt_payments_usecase.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/currency_service.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class DebtController extends GetxController {
   final debts = <DebtEntity>[].obs;
@@ -23,7 +25,6 @@ class DebtController extends GetxController {
   final selectedType = DebtType.iOwe.obs;
   final personNameCtrl = TextEditingController();
   final amountCtrl = TextEditingController();
-  final selectedCurrency = 'IDR'.obs;
   final selectedDeadline = Rxn<DateTime>();
   final noteCtrl = TextEditingController();
   final paymentAmountCtrl = TextEditingController();
@@ -93,14 +94,12 @@ class DebtController extends GetxController {
       selectedType.value = existing.type;
       personNameCtrl.text = existing.personName;
       amountCtrl.text = existing.amount.toStringAsFixed(0);
-      selectedCurrency.value = existing.currencyCode;
       selectedDeadline.value = existing.deadline;
       noteCtrl.text = existing.note ?? '';
     } else {
       selectedType.value = DebtType.iOwe;
       personNameCtrl.clear();
       amountCtrl.clear();
-      selectedCurrency.value = 'IDR';
       selectedDeadline.value = null;
       noteCtrl.clear();
     }
@@ -121,13 +120,14 @@ class DebtController extends GetxController {
         type: selectedType.value.value,
         personName: name,
         amount: amount,
-        currencyCode: selectedCurrency.value,
+        currencyCode: Get.find<CurrencyService>().baseCurrency,
         deadline: selectedDeadline.value,
         note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
       ));
       result.fold((f) => Get.snackbar('Error', f.message), (_) {
         Get.back();
         loadDebts();
+        _notifyDashboard();
       });
     } else {
       final updated = _DebtCopy(
@@ -137,7 +137,7 @@ class DebtController extends GetxController {
         personName: name,
         amount: amount,
         paidAmount: existing.paidAmount,
-        currencyCode: selectedCurrency.value,
+        currencyCode: existing.currencyCode,
         deadline: selectedDeadline.value,
         note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
         status: existing.status,
@@ -149,9 +149,16 @@ class DebtController extends GetxController {
       result.fold((f) => Get.snackbar('Error', f.message), (_) {
         Get.back();
         loadDebts();
+        _notifyDashboard();
       });
     }
     isLoading.value = false;
+  }
+
+  void _notifyDashboard() {
+    if (Get.isRegistered<DashboardController>()) {
+      Get.find<DashboardController>().loadAll();
+    }
   }
 
   Future<void> recordPayment(DebtEntity debt) async {
@@ -174,6 +181,7 @@ class DebtController extends GetxController {
       Get.back();
       loadDebts();
       loadPayments(debt.id);
+      _notifyDashboard();
     });
   }
 

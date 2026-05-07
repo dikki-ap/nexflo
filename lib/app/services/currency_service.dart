@@ -100,6 +100,17 @@ class CurrencyService extends GetxService {
     return currency?.symbol ?? currencyCode;
   }
 
+  static const _symbolMap = {
+    'IDR': 'Rp', 'USD': '\$', 'EUR': '€', 'GBP': '£',
+    'JPY': '¥', 'CNY': '¥', 'KRW': '₩', 'SGD': 'S\$',
+    'MYR': 'RM', 'AUD': 'A\$', 'CAD': 'C\$', 'CHF': 'Fr',
+    'HKD': 'HK\$', 'INR': '₹', 'THB': '฿', 'VND': '₫',
+    'PHP': '₱', 'TWD': 'NT\$', 'BRL': 'R\$', 'MXN': 'MX\$',
+    'ZAR': 'R', 'SEK': 'kr', 'NOK': 'kr', 'DKK': 'kr',
+    'SAR': '﷼', 'AED': 'د.إ', 'TRY': '₺', 'RUB': '₽',
+  };
+
+  String get currencySymbol => _symbolMap[_baseCurrency] ?? _baseCurrency;
   Map<String, double> get currentRates => _rates[_baseCurrency] ?? {};
   String get baseCurrency => _baseCurrency;
 

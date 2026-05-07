@@ -122,7 +122,7 @@ class WalletFormPage extends GetView<WalletController> {
                       prefixIcon: Padding(
                         padding: const EdgeInsets.fromLTRB(0, 14, 8, 0),
                         child: Text(
-                          Get.find<CurrencyService>().baseCurrency,
+                          Get.find<CurrencyService>().currencySymbol,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -189,7 +189,7 @@ class WalletFormPage extends GetView<WalletController> {
                               padding:
                                   const EdgeInsets.fromLTRB(0, 12, 8, 0),
                               child: Text(
-                                Get.find<CurrencyService>().baseCurrency,
+                                Get.find<CurrencyService>().currencySymbol,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,

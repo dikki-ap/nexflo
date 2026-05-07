@@ -68,7 +68,7 @@ class WalletCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${Get.find<CurrencyService>().baseCurrency} ${_formatBalance(wallet.balance)}',
+                    '${Get.find<CurrencyService>().currencySymbol} ${_formatBalance(wallet.balance)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

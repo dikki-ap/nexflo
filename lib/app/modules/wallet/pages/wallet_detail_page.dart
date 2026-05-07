@@ -162,7 +162,7 @@ class WalletDetailPage extends StatelessWidget {
                           _InfoRow(
                             label: 'Credit Limit',
                             value:
-                                '${Get.find<CurrencyService>().baseCurrency} ${wallet.creditLimit!.toStringAsFixed(2)}',
+                                '${Get.find<CurrencyService>().currencySymbol} ${wallet.creditLimit!.toStringAsFixed(2)}',
                             isDark: isDark,
                           ),
                         _InfoRow(

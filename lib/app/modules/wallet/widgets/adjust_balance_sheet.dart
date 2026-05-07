@@ -56,7 +56,7 @@ class _AdjustBalanceSheetState extends State<AdjustBalanceSheet> {
             ],
             decoration: InputDecoration(
               labelText: 'New Balance',
-              prefixText: '${Get.find<CurrencyService>().baseCurrency} ',
+              prefixText: '${Get.find<CurrencyService>().currencySymbol} ',
               border: const OutlineInputBorder(),
             ),
             autofocus: true,

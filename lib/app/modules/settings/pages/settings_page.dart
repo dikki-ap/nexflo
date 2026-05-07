@@ -182,16 +182,7 @@ class SettingsPage extends GetView<SettingsController> {
                   label: 'Version',
                   value: '1.0.0',
                   isDark: isDark,
-                ),
-                _SettingTile(
-                  icon: Icons.description_outlined,
-                  label: 'Licenses',
-                  isDark: isDark,
                   isLast: true,
-                  onTap: () => showLicensePage(
-                    context: context,
-                    applicationName: 'NexFlo',
-                  ),
                 ),
               ],
             ),

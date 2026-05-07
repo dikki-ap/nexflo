@@ -116,7 +116,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                               padding:
                                   const EdgeInsets.fromLTRB(16, 14, 4, 0),
                               child: Text(
-                                Get.find<CurrencyService>().baseCurrency,
+                                Get.find<CurrencyService>().currencySymbol,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w700,
@@ -232,11 +232,15 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                                     : AppColors.grey200,
                               ),
                               DropdownButtonFormField<String>(
-                                value: controller.selectedCategoryId.value,
+                                isExpanded: true,
+                                value: cats.any((c) => c.id == controller.selectedCategoryId.value)
+                                    ? controller.selectedCategoryId.value
+                                    : null,
                                 items: cats
                                     .map((c) => DropdownMenuItem(
                                         value: c.id, child: Text(c.name)))
                                     .toList(),
+                                hint: const Text('Select category'),
                                 onChanged: (v) =>
                                     controller.selectedCategoryId.value = v,
                                 decoration: const InputDecoration(
@@ -326,17 +330,33 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Future<void> _pickDate(BuildContext context) async {
+    final current = controller.selectedDate.value;
     final picked = await showDatePicker(
       context: context,
-      initialDate: controller.selectedDate.value,
+      initialDate: current,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) controller.selectedDate.value = picked;
+    if (picked == null) return;
+    if (!context.mounted) return;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: current.hour, minute: current.minute),
+    );
+    controller.selectedDate.value = DateTime(
+      picked.year,
+      picked.month,
+      picked.day,
+      pickedTime?.hour ?? current.hour,
+      pickedTime?.minute ?? current.minute,
+    );
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_month(d.month)} ${d.year}';
+  String _formatDate(DateTime d) {
+    final h = d.hour.toString().padLeft(2, '0');
+    final m = d.minute.toString().padLeft(2, '0');
+    return '${d.day} ${_month(d.month)} ${d.year}  $h:$m';
+  }
 
   String _month(int m) => const [
         '',

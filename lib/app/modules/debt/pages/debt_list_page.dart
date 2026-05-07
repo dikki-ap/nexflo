@@ -12,6 +12,7 @@ import '../../../core/widgets/shimmer_loading.dart';
 import '../../../core/widgets/staggered_list.dart';
 import '../../../domain/entities/debt_entity.dart';
 import '../controllers/debt_controller.dart';
+import '../../../services/currency_service.dart';
 
 class DebtListPage extends GetView<DebtController> {
   const DebtListPage({super.key});
@@ -337,7 +338,7 @@ class _DebtCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${debt.currencyCode} ${_fmt(debt.remaining)} remaining',
+                      '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.remaining)} remaining',
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark

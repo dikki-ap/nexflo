@@ -6,6 +6,7 @@ import '../../../core/enums/debt_type.dart';
 import '../../../domain/entities/debt_entity.dart';
 import '../../../domain/entities/debt_payment_entity.dart';
 import '../controllers/debt_controller.dart';
+import '../../../services/currency_service.dart';
 
 class DebtDetailPage extends GetView<DebtController> {
   const DebtDetailPage({super.key});
@@ -89,7 +90,7 @@ class DebtDetailPage extends GetView<DebtController> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${debt.currencyCode} ${_fmt(debt.remaining)}',
+                    '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.remaining)}',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -126,9 +127,9 @@ class DebtDetailPage extends GetView<DebtController> {
                 child: Column(
                   children: [
                     _InfoRow('Total Amount',
-                        '${debt.currencyCode} ${_fmt(debt.amount)}'),
+                        '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.amount)}'),
                     _InfoRow('Paid',
-                        '${debt.currencyCode} ${_fmt(debt.paidAmount)}',
+                        '${Get.find<CurrencyService>().currencySymbol} ${_fmt(debt.paidAmount)}',
                         valueColor: AppColors.income),
                     _InfoRow('Status', _statusLabel(debt.status.value)),
                     if (debt.deadline != null)

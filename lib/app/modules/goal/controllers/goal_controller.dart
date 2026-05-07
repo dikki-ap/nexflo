@@ -13,6 +13,7 @@ import '../../../domain/usecases/goal/update_goal_usecase.dart';
 import '../../../domain/usecases/goal/delete_goal_usecase.dart';
 import '../../../domain/usecases/goal/allocate_to_goal_usecase.dart';
 import '../../../services/auth_service.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class GoalController extends GetxController {
   final goals = <GoalEntity>[].obs;
@@ -115,6 +116,7 @@ class GoalController extends GetxController {
       result.fold((f) => Get.snackbar('Error', f.message), (_) {
         Get.back();
         loadGoals();
+        _notifyDashboard();
       });
     } else {
       final updated = _GoalCopy(
@@ -137,9 +139,16 @@ class GoalController extends GetxController {
       result.fold((f) => Get.snackbar('Error', f.message), (_) {
         Get.back();
         loadGoals();
+        _notifyDashboard();
       });
     }
     isLoading.value = false;
+  }
+
+  void _notifyDashboard() {
+    if (Get.isRegistered<DashboardController>()) {
+      Get.find<DashboardController>().loadAll();
+    }
   }
 
   Future<void> allocate(GoalEntity goal) async {
@@ -156,6 +165,7 @@ class GoalController extends GetxController {
       allocateCtrl.clear();
       Get.back();
       loadGoals();
+      _notifyDashboard();
     });
   }
 
