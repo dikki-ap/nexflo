@@ -24,6 +24,7 @@ import '../../modules/transaction/pages/transaction_detail_page.dart';
 import '../../modules/budget/bindings/budget_binding.dart';
 import '../../modules/budget/pages/budget_list_page.dart';
 import '../../modules/budget/pages/budget_form_page.dart';
+import '../../modules/budget/pages/budget_detail_page.dart';
 import '../../modules/goal/bindings/goal_binding.dart';
 import '../../modules/goal/pages/goal_list_page.dart';
 import '../../modules/goal/pages/goal_form_page.dart';
@@ -142,6 +143,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.budgetAdd,
       page: () => const BudgetFormPage(),
+      binding: BudgetBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.budgetDetail,
+      page: () => const BudgetDetailPage(),
       binding: BudgetBinding(),
     ),
     GetPage(

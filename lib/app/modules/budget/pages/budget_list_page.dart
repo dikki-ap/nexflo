@@ -52,9 +52,16 @@ class BudgetListPage extends GetView<BudgetController> {
               return _AlertBanner(controller.alertBudgets.length);
             }
             final idx = controller.alertBudgets.isNotEmpty ? i - 1 : i;
+            final budget = controller.budgets[idx];
             return StaggeredItem(
               delayIndex: idx,
-              child: _BudgetCard(controller.budgets[idx], controller, isDark),
+              child: GestureDetector(
+                onTap: () {
+                  controller.loadDetailTransactions(budget);
+                  Get.toNamed(AppRoutes.budgetDetail, arguments: budget);
+                },
+                child: _BudgetCard(budget, controller, isDark),
+              ),
             );
           },
         );
@@ -69,11 +76,11 @@ class BudgetListPage extends GetView<BudgetController> {
           height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
-            gradient: AppColors.tealGradient,
+            gradient: AppColors.primaryGradient(Theme.of(context).colorScheme.primary),
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: AppColors.tealGlow,
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -147,14 +154,14 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 80,
             height: 80,
-            decoration: const BoxDecoration(
-              color: AppColors.tealGlowSoft,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.pie_chart_outline_rounded,
               size: 36,
-              color: AppColors.tealMid,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 20),

@@ -25,6 +25,7 @@ abstract class AppRoutes {
   static const categoryEdit = '/categories/:id/edit';
   static const budgets = '/budgets';
   static const budgetAdd = '/budgets/add';
+  static const budgetDetail = '/budgets/detail';
   static const budgetEdit = '/budgets/:id/edit';
   static const goals = '/goals';
   static const goalAdd = '/goals/add';
